@@ -1,0 +1,80 @@
+// functions/src/voice/generateAgoraToken.ts
+//
+// Agora requires a signed token per user per channel (never expose your
+// Agora App Certificate to the client). This function mints one for
+// whoever calls it — anonymous Firebase Auth users included, since
+// request.auth is populated for anonymous sign-ins too.
+//
+// Speaking vs. listening is controlled by Agora `role`, not by whether the
+// user is "registered" — that's the whole point of the no-sign-up model.
+// Anyone with a display name set (see useAnonymousIdentity.ts) can speak;
+// moderators can still mute/kick via Agora's RTM channel + the
+// `voiceRooms` Firestore doc's moderator controls.
+
+import * as functions from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import pkg from "agora-access-token";
+const { RtcTokenBuilder, RtcRole } = pkg;
+
+if (!getApps().length) {
+  initializeApp();
+}
+const db = getFirestore();
+
+const AGORA_APP_ID = defineSecret("AGORA_APP_ID");
+const AGORA_APP_CERTIFICATE = defineSecret("AGORA_APP_CERTIFICATE");
+
+const TOKEN_TTL_SECONDS = 60 * 60; // 1 hour — client re-requests on expiry
+
+interface TokenRequest {
+  channelName: string; // e.g. voice room id, "hb245-discussion"
+  role: "speaker" | "listener";
+}
+
+export const generateAgoraToken = functions.onCall(
+  { secrets: [AGORA_APP_ID, AGORA_APP_CERTIFICATE] },
+  async (request) => {
+    if (!request.auth) {
+      // Anonymous auth still populates request.auth — this only blocks
+      // truly unauthenticated calls (e.g. a raw curl with no Firebase token).
+      throw new functions.HttpsError("unauthenticated", "Sign-in required.");
+    }
+
+    const { channelName, role } = request.data as TokenRequest;
+    if (!channelName) {
+      throw new functions.HttpsError("invalid-argument", "channelName is required.");
+    }
+
+    // Require a display name before granting a speaker token — keeps voice
+    // rooms from filling with literally anonymous, unaccountable speakers,
+    // while still requiring zero account creation.
+    if (role === "speaker") {
+      const profile = await db.collection("anonymousProfiles").doc(request.auth.uid).get();
+      if (!profile.exists || !profile.data()?.displayName) {
+        throw new functions.HttpsError(
+          "failed-precondition",
+          "Set a display name before speaking."
+        );
+      }
+    }
+
+    const expireAt = Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS;
+    const agoraRole = role === "speaker" ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
+
+    // Use a numeric-hash of the Firebase uid as the Agora account UID, or
+    // 0 to let Agora assign one — using 0 here to avoid a collision-prone
+    // hash function in this starter.
+    const token = RtcTokenBuilder.buildTokenWithUid(
+      AGORA_APP_ID.value(),
+      AGORA_APP_CERTIFICATE.value(),
+      channelName,
+      0,
+      agoraRole,
+      expireAt
+    );
+
+    return { token, appId: AGORA_APP_ID.value(), expireAt, role };
+  }
+);

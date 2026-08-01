@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function role() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdminOrModerator() {
+      return request.auth != null && role() in ['administrator', 'moderator'];
+    }
+
+    // Anyone can stream a video — that's the point. Only admins/moderators
+    // can upload, and only video files under 500MB.
+    match /community-videos/{fileName} {
+      allow read: if true;
+      allow write: if isAdminOrModerator()
+                   && request.resource.size < 500 * 1024 * 1024
+                   && request.resource.contentType.matches('video/.*');
+    }
+
+    // Representative photos — same pattern.
+    match /representative-photos/{fileName} {
+      allow read: if true;
+      allow write: if isAdminOrModerator()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

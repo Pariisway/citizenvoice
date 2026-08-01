@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "comments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "authorId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "authorId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "representatives",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cityFips", "order": "ASCENDING" },
+        { "fieldPath": "officeLevel", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

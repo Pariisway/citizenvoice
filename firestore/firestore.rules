@@ -1,0 +1,154 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return isSignedIn()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : 'guest';
+    }
+
+    function isModeratorOrAbove() {
+      return role() in ['moderator', 'administrator', 'community_leader'];
+    }
+
+    function isAdmin() {
+      return role() == 'administrator';
+    }
+
+    // Anonymous accounts flagged by the burst-posting guard (see
+    // functions/src/moderation/rateLimitGuard.ts) are blocked from further
+    // writes until a moderator clears the flag.
+    function isNotSuspended() {
+      return !exists(/databases/$(database)/documents/suspendedAuthors/$(request.auth.uid));
+    }
+
+    // ---------- Public, read-only civic data ----------
+    // Representatives, bills, meetings, districts: anyone (including
+    // anonymous/guest users) can read. Only moderators/admins can write —
+    // civic facts are curated, not crowd-edited, to protect neutrality.
+    match /representatives/{repId} {
+      allow read: if true;
+      allow write: if isModeratorOrAbove();
+    }
+
+    match /bills/{billId} {
+      allow read: if true;
+      allow write: if isModeratorOrAbove();
+    }
+
+    match /meetings/{meetingId} {
+      allow read: if true;
+      allow write: if isModeratorOrAbove();
+    }
+
+    match /cities/{cityId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Server-populated cache from the findMyRepresentatives Cloud Function.
+    // Never written directly by clients.
+    match /districtLookupCache/{cacheKey} {
+      allow read: if true;
+      allow write: if false; // Cloud Functions use the Admin SDK, which bypasses rules.
+    }
+
+    // ---------- Citizen Chat videos ----------
+    // Public, ad-supported video feed. Anyone can watch, no sign-in
+    // required. Only admins/moderators can publish or remove a video —
+    // the actual file upload is gated separately by storage.rules.
+    match /videos/{videoId} {
+      allow read: if true;
+      allow create, update, delete: if isModeratorOrAbove();
+    }
+
+    // ---------- Anonymous identity ----------
+    // Every visitor is silently signed in via Firebase Anonymous Auth
+    // (see lib/useAnonymousIdentity.ts) — no email/password, no visible
+    // sign-up screen. This doc just stores their chosen display name.
+    match /anonymousProfiles/{uid} {
+      allow read: if true; // display names are public by nature
+      allow write: if isSignedIn() && request.auth.uid == uid
+                   && request.resource.data.displayName is string
+                   && request.resource.data.displayName.size() <= 40;
+    }
+
+    // Written only by the rateLimitGuard Cloud Function (Admin SDK bypasses
+    // rules); moderators can read to review, nobody can write from the client.
+    match /suspendedAuthors/{uid} {
+      allow read: if isModeratorOrAbove();
+      allow write: if false;
+    }
+
+    // ---------- User-generated content ----------
+    // Comments and questions: any signed-in user (anonymous auth counts —
+    // request.auth is populated) can create, as long as they're not
+    // currently suspended and include a display name. Only the author or a
+    // moderator can edit/delete.
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isNotSuspended()
+                    && request.resource.data.authorId == request.auth.uid
+                    && request.resource.data.authorName is string
+                    && request.resource.data.authorName.size() > 0;
+      allow update, delete: if isSignedIn()
+                    && (resource.data.authorId == request.auth.uid || isModeratorOrAbove());
+    }
+
+    match /questions/{questionId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isNotSuspended()
+                    && request.resource.data.authorId == request.auth.uid
+                    && request.resource.data.authorName is string
+                    && request.resource.data.authorName.size() > 0;
+      allow update, delete: if isSignedIn()
+                    && (resource.data.authorId == request.auth.uid || isModeratorOrAbove());
+    }
+
+    // ---------- Voice rooms ----------
+    // Room metadata (topic, host, active speaker list) lives in Firestore;
+    // actual audio flows through Agora and never touches Firestore. Any
+    // non-suspended signed-in (including anonymous) user can raise a hand;
+    // actually speaking additionally requires a display name, enforced in
+    // generateAgoraToken.ts before a speaker token is issued.
+    match /voiceRooms/{roomId} {
+      allow read: if true;
+      allow create: if isModeratorOrAbove();
+      allow update: if isModeratorOrAbove()
+                    || (isSignedIn() && isNotSuspended()
+                          && request.resource.data.diff(resource.data)
+                             .affectedKeys().hasOnly(['raisedHands']));
+      allow delete: if isModeratorOrAbove();
+    }
+
+    // ---------- Users ----------
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      // Users can edit their own profile fields, but never their own `role`.
+      allow update: if isSignedIn() && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role
+                    || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Moderation ----------
+    match /flags/{flagId} {
+      allow read: if isModeratorOrAbove();
+      allow create: if isSignedIn();
+      allow update, delete: if isModeratorOrAbove();
+    }
+
+    // ---------- Default deny ----------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
