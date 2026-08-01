@@ -22,3 +22,5 @@ serviceAccountKey.json
 # Editors
 .vscode/
 .idea/
+*.js.map
+types/*.js
