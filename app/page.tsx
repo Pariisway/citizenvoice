@@ -1,9 +1,11 @@
 import Link from "next/link";
 import AdSlot from "@/components/AdSlot";
+import TopNav from "@/components/TopNav";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#0E1225] text-white">
+      <TopNav />
       <section className="px-6 py-24 text-center max-w-3xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">
           Know Your Government.

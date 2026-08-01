@@ -13,13 +13,14 @@
 // re-verification later — treat this as a starting point, not gospel.
 // Anything the admin later edits in the dashboard takes precedence.
 
-import * as admin from "firebase-admin";
+import { initializeApp, cert, ServiceAccount } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 import serviceAccount from "./serviceAccountKey.json";
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+initializeApp({
+  credential: cert(serviceAccount as ServiceAccount),
 });
-const db = admin.firestore();
+const db = getFirestore();
 
 const ST_CLAIR_COUNTY_FIPS = "17163";
 const NOW = new Date().toISOString();

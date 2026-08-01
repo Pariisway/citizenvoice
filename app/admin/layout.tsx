@@ -6,7 +6,7 @@
 // this is the ONLY part of the site that ever asks anyone to sign in.
 
 import { useState } from "react";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { firebaseApp } from "@/lib/firebaseClient";
 import { useAdminAuth } from "@/lib/useAdminAuth";
 
@@ -21,6 +21,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } finally {
       setSigningIn(false);
     }
+  }
+
+  async function handleSignOut() {
+    await signOut(getAuth(firebaseApp));
   }
 
   if (authState.status === "loading") {
@@ -50,17 +54,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           Your account ({authState.user.email}) doesn't have admin access.
           Ask an existing administrator to grant your role.
         </p>
+        <button
+          onClick={handleSignOut}
+          className="mt-4 text-sm text-white/50 hover:text-white/80 underline"
+        >
+          Sign out
+        </button>
       </CenteredMessage>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#0E1225] text-white">
-      <nav className="border-b border-white/10 px-6 py-4 flex gap-6 text-sm">
+      <nav className="border-b border-white/10 px-6 py-4 flex gap-6 text-sm items-center">
         <a href="/admin" className="text-white/70 hover:text-[#00E5C3]">Dashboard</a>
         <a href="/admin/videos" className="text-white/70 hover:text-[#00E5C3]">Videos</a>
         <a href="/admin/representatives" className="text-white/70 hover:text-[#00E5C3]">Representatives</a>
+        <a href="/admin/flags" className="text-white/70 hover:text-[#00E5C3]">Flags</a>
+        <a href="/admin/team" className="text-white/70 hover:text-[#00E5C3]">Team</a>
         <span className="ml-auto text-white/40">{authState.role}</span>
+        <button
+          onClick={handleSignOut}
+          className="text-white/50 hover:text-white/80 underline"
+        >
+          Sign out
+        </button>
       </nav>
       <div className="px-6 py-10">{children}</div>
     </div>

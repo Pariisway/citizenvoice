@@ -38,6 +38,10 @@ if (!getApps().length) {
   initializeApp();
 }
 const db = getFirestore();
+// Real legislator data from OpenStates/Congress.gov frequently omits fields
+// (no website on file, no public phone, etc.), which land as undefined.
+// Firestore rejects documents containing a literal undefined value.
+db.settings({ ignoreUndefinedProperties: true });
 
 const MAPBOX_TOKEN = defineSecret("MAPBOX_SERVER_TOKEN");
 const OPENSTATES_API_KEY = defineSecret("OPENSTATES_API_KEY");
