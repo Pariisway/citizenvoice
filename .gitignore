@@ -24,3 +24,4 @@ serviceAccountKey.json
 .idea/
 *.js.map
 types/*.js
+*.zip
