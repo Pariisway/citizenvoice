@@ -15,6 +15,11 @@ export default function AdminDashboardPage() {
           href="/admin/videos"
         />
         <DashboardCard
+          title="Homepage Content"
+          description="Edit the hero, mission, educational sections, and FAQ — live, no rebuild."
+          href="/admin/homepage"
+        />
+        <DashboardCard
           title="Civic Academy"
           description="Add short lessons on how laws are made."
           href="/admin/academy"

@@ -69,6 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <nav className="border-b border-white/10 px-6 py-4 flex gap-6 text-sm items-center">
         <a href="/admin" className="text-white/70 hover:text-[#00E5C3]">Dashboard</a>
         <a href="/admin/videos" className="text-white/70 hover:text-[#00E5C3]">Videos</a>
+        <a href="/admin/homepage" className="text-white/70 hover:text-[#00E5C3]">Homepage</a>
         <a href="/admin/academy" className="text-white/70 hover:text-[#00E5C3]">Academy</a>
         <a href="/admin/representatives" className="text-white/70 hover:text-[#00E5C3]">Representatives</a>
         <a href="/admin/flags" className="text-white/70 hover:text-[#00E5C3]">Flags</a>

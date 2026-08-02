@@ -1,24 +1,38 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { firebaseApp } from "@/lib/firebaseClient";
+import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/defaultHomepageContent";
+import type { HomepageContent } from "@/types/siteContent";
 import AdSlot from "@/components/AdSlot";
 import TopNav from "@/components/TopNav";
 import WeeklyRhythm from "@/components/WeeklyRhythm";
 
 export default function HomePage() {
+  const [content, setContent] = useState<HomepageContent>(DEFAULT_HOMEPAGE_CONTENT);
+
+  useEffect(() => {
+    const db = getFirestore(firebaseApp);
+    getDoc(doc(db, "siteContent", "homepage")).then((snap) => {
+      if (snap.exists()) {
+        setContent(snap.data() as HomepageContent);
+      }
+    });
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#0E1225] text-white">
       <TopNav />
 
       <section className="px-6 py-24 text-center max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">
-          Learn how laws are made.
-          <br />
-          <span className="text-[#00E5C3]">Build your own.</span>
+        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight whitespace-pre-line">
+          {content.heroHeadline}
         </h1>
 
         <p className="mt-6 text-white/60 max-w-xl mx-auto">
-          Citizen Voice is where everyday people learn how government
-          actually works, understand the laws that affect their community,
-          and turn their own ideas into well-supported proposals.
+          {content.heroSubhead}
         </p>
 
         <div className="mt-10 flex flex-wrap gap-3 justify-center">
@@ -41,15 +55,8 @@ export default function HomePage() {
 
       <section className="px-6 py-12 border-y border-white/10 bg-white/[0.02]">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-xl font-semibold">
-            You don't have to be an elected official to change your city.
-          </h2>
-          <p className="mt-3 text-white/60">
-            Most people never learn how a law actually gets written —
-            because most sites make it feel like it's not their job. Here,
-            it is. Learn the process, then build a community proposal for
-            the change you want to see.
-          </p>
+          <h2 className="text-xl font-semibold">{content.missionTitle}</h2>
+          <p className="mt-3 text-white/60">{content.missionBody}</p>
         </div>
       </section>
 
@@ -73,7 +80,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="px-6 py-12 border-y border-white/10 bg-white/[0.02]">
+      {/* Educational sections — real, substantial content, editable from /admin/homepage */}
+      <section className="px-6 py-16 border-y border-white/10 bg-white/[0.02]">
+        <div className="max-w-2xl mx-auto space-y-12">
+          {content.sections.map((section) => (
+            <div key={section.id}>
+              <h2 className="text-xl font-semibold">{section.title}</h2>
+              <p className="mt-3 text-white/70 leading-relaxed">{section.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-6 py-12 border-b border-white/10">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-xl font-semibold">Have an idea for your community?</h2>
           <p className="mt-3 text-white/60">
@@ -96,6 +115,21 @@ export default function HomePage() {
       <div className="px-6 max-w-2xl mx-auto">
         <AdSlot slot="home-mid" />
       </div>
+
+      {/* FAQ — real content depth, also directly useful to visitors */}
+      <section className="px-6 py-16">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-xl font-semibold text-center">Frequently Asked Questions</h2>
+          <div className="mt-8 space-y-6">
+            {content.faq.map((item) => (
+              <div key={item.id}>
+                <p className="font-medium">{item.question}</p>
+                <p className="mt-1.5 text-white/60 text-sm leading-relaxed">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <footer className="px-6 py-10 text-center text-sm text-white/30">
         <Link href="/privacy" className="hover:text-white/60">Privacy Policy</Link>

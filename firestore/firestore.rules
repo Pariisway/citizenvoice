@@ -82,6 +82,14 @@ service cloud.firestore {
       allow write: if isSignedIn() && request.auth.uid == uid;
     }
 
+    // ---------- Editable site content ----------
+    // Homepage copy, editable live from /admin/homepage. Public read
+    // (this is the actual page content), moderator+ write only.
+    match /siteContent/{docId} {
+      allow read: if true;
+      allow write: if isModeratorOrAbove();
+    }
+
     // ---------- Anonymous identity ----------
     // Every visitor is silently signed in via Firebase Anonymous Auth
     // (see lib/useAnonymousIdentity.ts) — no email/password, no visible
