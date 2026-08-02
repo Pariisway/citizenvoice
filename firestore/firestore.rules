@@ -69,6 +69,19 @@ service cloud.firestore {
       allow create, update, delete: if isModeratorOrAbove();
     }
 
+    // ---------- Civic Academy ----------
+    // Free to watch, no sign-in required. Lessons are curated content
+    // (admin/moderator only); progress is tracked per anonymous identity
+    // and only that identity can read/write its own progress doc.
+    match /lessons/{lessonId} {
+      allow read: if true;
+      allow create, update, delete: if isModeratorOrAbove();
+    }
+    match /lessonProgress/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
     // ---------- Anonymous identity ----------
     // Every visitor is silently signed in via Firebase Anonymous Auth
     // (see lib/useAnonymousIdentity.ts) — no email/password, no visible

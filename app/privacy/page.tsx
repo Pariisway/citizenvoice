@@ -11,12 +11,16 @@
 // own biometric and consumer privacy laws — BIPA is relevant if you ever
 // add voice-based speaker identification).
 
+import TopNav from "@/components/TopNav";
+
 export default function PrivacyPolicyPage() {
   return (
-    <main className="min-h-screen bg-[#0E1225] text-white px-6 py-16">
-      <div className="max-w-2xl mx-auto prose prose-invert prose-headings:text-white">
+    <main className="min-h-screen bg-[#0E1225] text-white">
+      <TopNav />
+      <div className="max-w-2xl mx-auto px-6 py-16 prose prose-invert prose-headings:text-white">
         <h1 className="text-3xl font-semibold">Privacy Policy</h1>
         <p className="text-white/50">Last updated: July 31, 2026</p>
+
 
         <h2>What we collect</h2>
         <p>

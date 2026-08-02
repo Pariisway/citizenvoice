@@ -7,9 +7,11 @@
 // board — with an honest note about which offices we couldn't resolve yet.
 
 import { useState } from "react";
+import Link from "next/link";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { firebaseApp } from "@/lib/firebaseClient";
 import type { RepresentativeLookupResult, OfficeLevel } from "@/types/civic";
+import TopNav from "@/components/TopNav";
 
 const OFFICE_LABELS: Record<OfficeLevel, string> = {
   federal_senate: "U.S. Senate",
@@ -81,8 +83,9 @@ export default function FindMyRepresentativesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0E1225] text-white px-6 py-16">
-      <div className="max-w-2xl mx-auto">
+    <main className="min-h-screen bg-[#0E1225] text-white">
+      <TopNav />
+      <div className="max-w-2xl mx-auto px-6 py-16">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
           These are the people who represent{" "}
           <span className="text-[#00E5C3]">you</span>.
@@ -139,30 +142,52 @@ export default function FindMyRepresentativesPage() {
               </p>
             )}
 
-            {result.representatives.map((rep) => (
-              <div
-                key={rep.id}
-                className="rounded-2xl border border-white/10 bg-white/[0.03]
-                           backdrop-blur-sm px-5 py-4 flex items-center gap-4"
-              >
-                {rep.photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={rep.photoUrl}
-                    alt={rep.fullName}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-white/10" />
-                )}
-                <div>
-                  <p className="font-medium">{rep.fullName}</p>
-                  <p className="text-sm text-white/50">
-                    {OFFICE_LABELS[rep.officeLevel]} · {rep.officeTitle}
-                  </p>
+            {result.representatives.map((rep) => {
+              // Only manually-curated local officials have a real Firestore
+              // doc to link to — state/federal reps resolved live from
+              // OpenStates/Congress.gov use synthetic IDs with no backing
+              // page, so those link straight to their official site instead.
+              const card = (
+                <div
+                  className="rounded-2xl border border-white/10 bg-white/[0.03]
+                             backdrop-blur-sm px-5 py-4 flex items-center gap-4
+                             hover:border-[#00E5C3]/40 transition-colors"
+                >
+                  {rep.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={rep.photoUrl}
+                      alt={rep.fullName}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-white/10" />
+                  )}
+                  <div>
+                    <p className="font-medium">{rep.fullName}</p>
+                    <p className="text-sm text-white/50">
+                      {OFFICE_LABELS[rep.officeLevel]} · {rep.officeTitle}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+
+              if (rep.dataSource === "manual_curation") {
+                return (
+                  <Link key={rep.id} href={`/representatives?id=${rep.id}`}>
+                    {card}
+                  </Link>
+                );
+              }
+              if (rep.officialWebsite) {
+                return (
+                  <a key={rep.id} href={rep.officialWebsite} target="_blank" rel="noopener noreferrer">
+                    {card}
+                  </a>
+                );
+              }
+              return <div key={rep.id}>{card}</div>;
+            })}
 
             {result.unresolvedOffices.length > 0 && (
               <div className="mt-6 rounded-xl border border-white/10 px-4 py-3 text-sm text-white/40">

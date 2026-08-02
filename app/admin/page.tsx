@@ -15,6 +15,11 @@ export default function AdminDashboardPage() {
           href="/admin/videos"
         />
         <DashboardCard
+          title="Civic Academy"
+          description="Add short lessons on how laws are made."
+          href="/admin/academy"
+        />
+        <DashboardCard
           title="Manage representatives"
           description="Add or correct local officials (mayor, council, county board, school board)."
           href="/admin/representatives"

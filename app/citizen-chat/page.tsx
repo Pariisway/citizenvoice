@@ -1,25 +1,36 @@
+"use client";
+
 // app/citizen-chat/page.tsx
 //
-// Public, read-only. No sign-in required — matches the "no sign-up" model.
-// Server component: fetches videos directly from Firestore at request time.
+// Public, read-only, no sign-in required. Fetches client-side — static
+// export has no server to run per-request fetches on, so this can't be an
+// async server component anymore (that would only ever show whatever
+// videos existed at `next build` time, permanently stale).
 
+import { useEffect, useState } from "react";
 import { getFirestore, collection, getDocs, orderBy, query } from "firebase/firestore";
 import { firebaseApp } from "@/lib/firebaseClient";
 import type { CommunityVideo } from "@/types/civic";
 import AdSlot from "@/components/AdSlot";
+import TopNav from "@/components/TopNav";
+import WeeklyRhythm from "@/components/WeeklyRhythm";
 
-async function getVideos(): Promise<CommunityVideo[]> {
-  const db = getFirestore(firebaseApp);
-  const snap = await getDocs(query(collection(db, "videos"), orderBy("uploadedAt", "desc")));
-  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as CommunityVideo));
-}
+export default function CitizenChatPage() {
+  const [videos, setVideos] = useState<CommunityVideo[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function CitizenChatPage() {
-  const videos = await getVideos();
+  useEffect(() => {
+    const db = getFirestore(firebaseApp);
+    getDocs(query(collection(db, "videos"), orderBy("uploadedAt", "desc"))).then((snap) => {
+      setVideos(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as CommunityVideo)));
+      setLoading(false);
+    });
+  }, []);
 
   return (
-    <main className="min-h-screen bg-[#0E1225] text-white px-6 py-16">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen bg-[#0E1225] text-white">
+      <TopNav />
+      <div className="max-w-4xl mx-auto px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight">Citizen Chat</h1>
         <p className="mt-2 text-white/60">
           Meeting recordings, candidate interviews, and community updates —
@@ -28,8 +39,13 @@ export default async function CitizenChatPage() {
 
         <AdSlot slot="citizen-chat-top" className="mt-8" />
 
-        {videos.length === 0 ? (
-          <p className="mt-10 text-white/50">No videos yet — check back soon.</p>
+        {loading ? (
+          <p className="mt-10 text-white/40">Loading…</p>
+        ) : videos.length === 0 ? (
+          <p className="mt-10 text-white/50">
+            Nothing posted yet — new content goes up on the weekly schedule
+            below.
+          </p>
         ) : (
           <div className="mt-10 grid sm:grid-cols-2 gap-6">
             {videos.map((video, i) => (
@@ -55,6 +71,8 @@ export default async function CitizenChatPage() {
           </div>
         )}
       </div>
+
+      <WeeklyRhythm />
     </main>
   );
 }
