@@ -64,18 +64,20 @@ function LessonViewer() {
 
   return (
     <div className="max-w-xl mx-auto px-6 py-16">
-      <p className="text-xs text-white/40">{lesson.durationSeconds}s</p>
-      <h1 className="text-2xl font-semibold mt-2">{lesson.hook}</h1>
-
-      {lesson.videoUrl ? (
+      {lesson.videoUrl && (
         <video
           src={lesson.videoUrl}
           controls
           autoPlay
           onEnded={markComplete}
-          className="w-full mt-6 rounded-2xl bg-black aspect-video"
+          className="w-full rounded-2xl bg-black aspect-video"
         />
-      ) : (
+      )}
+
+      <p className={`text-xs text-white/40 ${lesson.videoUrl ? "mt-6" : ""}`}>{lesson.durationSeconds}s</p>
+      <h1 className="text-2xl font-semibold mt-2">{lesson.hook}</h1>
+
+      {!lesson.videoUrl && (
         <p className="mt-6 text-white/70 leading-relaxed text-lg">
           {lesson.cardContent}
         </p>

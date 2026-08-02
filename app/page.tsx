@@ -9,6 +9,7 @@ import type { HomepageContent } from "@/types/siteContent";
 import AdSlot from "@/components/AdSlot";
 import TopNav from "@/components/TopNav";
 import WeeklyRhythm from "@/components/WeeklyRhythm";
+import FeaturedVideo from "@/components/FeaturedVideo";
 
 export default function HomePage() {
   const [content, setContent] = useState<HomepageContent>(DEFAULT_HOMEPAGE_CONTENT);
@@ -26,8 +27,17 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#0E1225] text-white">
       <TopNav />
 
-      <section className="px-6 py-24 text-center max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight whitespace-pre-line">
+      <section className="px-6 pt-16 pb-24 text-center max-w-3xl mx-auto">
+        <div className="flex justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-512.png"
+            alt="Citizen Voice"
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full"
+          />
+        </div>
+
+        <h1 className="mt-4 text-4xl md:text-5xl font-semibold tracking-tight leading-tight whitespace-pre-line">
           {content.heroHeadline}
         </h1>
 
@@ -60,25 +70,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="px-6 py-16">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl font-semibold text-center">How it works</h2>
-          <div className="mt-8 grid sm:grid-cols-5 gap-4 text-sm">
+      <section className="px-6 py-20">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-semibold text-center">How it works</h2>
+          <div className="mt-10 grid sm:grid-cols-5 gap-4">
             {[
-              { step: "Learn", desc: "Understand how government works." },
-              { step: "Track", desc: "Follow bills that affect your community." },
-              { step: "Build", desc: "Develop community-backed proposals." },
-              { step: "Discuss", desc: "Join moderated voice conversations." },
-              { step: "Participate", desc: "Contact reps, attend meetings, organize." },
+              { emoji: "📖", step: "Learn", desc: "Understand how government works." },
+              { emoji: "🔍", step: "Track", desc: "Follow bills that affect your community." },
+              { emoji: "🛠️", step: "Build", desc: "Develop community-backed proposals." },
+              { emoji: "💬", step: "Discuss", desc: "Join moderated voice conversations." },
+              { emoji: "🤝", step: "Participate", desc: "Contact reps, attend meetings, organize." },
             ].map((item) => (
-              <div key={item.step} className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-4 text-center">
-                <p className="text-[#00E5C3] font-medium">{item.step}</p>
-                <p className="text-white/50 mt-1 text-xs">{item.desc}</p>
+              <div
+                key={item.step}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-8 text-center
+                           hover:border-[#00E5C3]/40 transition-colors"
+              >
+                <span className="text-4xl">{item.emoji}</span>
+                <p className="text-[#00E5C3] font-semibold mt-4 text-lg">{item.step}</p>
+                <p className="text-white/50 mt-2 text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      <FeaturedVideo />
 
       {/* Educational sections — real, substantial content, editable from /admin/homepage */}
       <section className="px-6 py-16 border-y border-white/10 bg-white/[0.02]">

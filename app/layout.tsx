@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Citizen Voice — Know Your Representatives",
   description:
     "Know Your Representatives. Understand the Laws. Shape Your Community.",
+  manifest: "/site.webmanifest",
   other: {
     "google-adsense-account": "ca-pub-1184595877548269",
   },

@@ -14,6 +14,7 @@ import { firebaseApp } from "@/lib/firebaseClient";
 import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import type { Lesson } from "@/types/academy";
 import TopNav from "@/components/TopNav";
+import { useAcademyCompletion } from "@/lib/useAcademyCompletion";
 
 export default function AcademyPage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -40,6 +41,7 @@ export default function AcademyPage() {
   const progressPct = lessons.length
     ? Math.round((completed.length / lessons.length) * 100)
     : 0;
+  const { isComplete } = useAcademyCompletion();
 
   return (
     <main className="min-h-screen bg-[#0E1225] text-white">
@@ -64,6 +66,16 @@ export default function AcademyPage() {
               {completed.length} of {lessons.length} complete
             </p>
           </div>
+        )}
+
+        {isComplete && (
+          <Link
+            href="/build-a-bill"
+            className="mt-6 block rounded-2xl bg-[#00E5C3]/10 border border-[#00E5C3]/40 px-5 py-4 hover:bg-[#00E5C3]/15 transition-colors"
+          >
+            <p className="text-[#00E5C3] font-medium">🎉 You finished Civic Academy — Bill Lab is unlocked.</p>
+            <p className="text-white/60 text-sm mt-1">Go build your first proposal →</p>
+          </Link>
         )}
 
         <div className="mt-8 space-y-3">
