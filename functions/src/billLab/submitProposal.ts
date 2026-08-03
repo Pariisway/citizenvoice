@@ -24,7 +24,11 @@ if (!getApps().length) {
   initializeApp();
 }
 const db = getFirestore();
-db.settings({ ignoreUndefinedProperties: true });
+// Note: ignoreUndefinedProperties is already set once globally in
+// findMyRepresentatives.ts — Firestore only allows settings() to be
+// called once per instance, and getFirestore() returns the same shared
+// instance across every file in this functions codebase. Don't call
+// .settings() again here.
 
 interface SubmitProposalRequest {
   title: string;
