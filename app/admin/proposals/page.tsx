@@ -74,7 +74,10 @@ export default function AdminProposalsPage() {
         {proposals.map((p) => (
           <div key={p.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="font-medium">{p.title}</p>
-            <p className="text-xs text-white/40 mt-0.5">{p.areaLabel} · by {p.authorName}</p>
+            <p className="text-xs text-white/40 mt-0.5">
+              {p.areaLabel} · by {p.authorName}
+              {p.academyComplete ? " · ✅ completed Academy" : " · Academy not completed"}
+            </p>
             <p className="text-sm text-white/70 mt-3"><span className="text-white/40">Problem:</span> {p.problem}</p>
             <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Change:</span> {p.proposedChange}</p>
             <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Evidence:</span> {p.evidence}</p>

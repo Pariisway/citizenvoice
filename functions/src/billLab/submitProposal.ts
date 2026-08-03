@@ -61,12 +61,12 @@ export const submitProposal = functions.onCall(async (request) => {
     ? (progressSnap.data()?.completedLessonIds?.length ?? 0)
     : 0;
 
-  if (totalLessons === 0 || completedCount < totalLessons) {
-    throw new functions.HttpsError(
-      "failed-precondition",
-      "Complete Civic Academy before submitting a proposal."
-    );
-  }
+  // Academy completion is now a recommendation, not a requirement — the
+  // hard block here previously worked against the actual goal (seeing
+  // that change is possible should be what pulls people in, not
+  // something they earn access to after homework). Still record it so
+  // admins reviewing a proposal have that context.
+  const academyComplete = totalLessons > 0 && completedCount >= totalLessons;
 
   const data = request.data as SubmitProposalRequest;
   const required: (keyof SubmitProposalRequest)[] = [
@@ -93,6 +93,7 @@ export const submitProposal = functions.onCall(async (request) => {
     authorName: data.authorName.trim(),
     status: "pending_review",
     upvoteCount: 0,
+    academyComplete,
     createdAt: new Date().toISOString(),
   });
 

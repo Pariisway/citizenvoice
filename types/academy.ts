@@ -42,6 +42,7 @@ export interface Proposal {
   authorName: string;
   status: ProposalStatus;
   upvoteCount: number;
+  academyComplete?: boolean;
   createdAt: string;
   reviewedAt?: string;
   reviewNote?: string;       // shown to author if rejected

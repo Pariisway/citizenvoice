@@ -47,18 +47,18 @@ export default function HomePage() {
 
         <div className="mt-10 flex flex-wrap gap-3 justify-center">
           <Link
-            href="/academy"
+            href="/billboard"
             className="rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
                        hover:opacity-90 transition-opacity"
           >
-            Start Civic Academy
+            See What People Are Building
           </Link>
           <Link
-            href="/find-my-representatives"
+            href="/build-a-bill"
             className="rounded-xl border border-white/20 text-white px-6 py-3
                        hover:border-[#00E5C3]/60 transition-colors"
           >
-            Find My Representatives
+            Build a Bill
           </Link>
         </div>
       </section>
@@ -114,15 +114,14 @@ export default function HomePage() {
           <h2 className="text-xl font-semibold">Have an idea for your community?</h2>
           <p className="mt-3 text-white/60">
             Anyone can propose a change — a park, a policy, a fix to
-            something broken. Complete Civic Academy to unlock the tools to
-            build a real, well-supported community proposal.
+            something broken. Build a proposal in a few minutes.
           </p>
           <Link
-            href="/academy"
+            href="/build-a-bill"
             className="mt-5 inline-block rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
                        hover:opacity-90 transition-opacity"
           >
-            Start Learning
+            Start Building
           </Link>
         </div>
       </section>

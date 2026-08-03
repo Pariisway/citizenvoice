@@ -18,7 +18,7 @@ export default function TopNav() {
 
   return (
     <nav className="border-b border-white/10 px-6 py-3">
-      <div className="max-w-5xl mx-auto flex items-center gap-8">
+      <div className="max-w-5xl mx-auto flex items-center justify-between">
         <Link
           href="/"
           className="font-semibold text-lg text-white hover:text-[#00E5C3] transition-colors whitespace-nowrap"

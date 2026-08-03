@@ -11,8 +11,6 @@ service firebase.storage {
       return request.auth != null && role() in ['administrator', 'moderator'];
     }
 
-    // Anyone can stream a video — that's the point. Only admins/moderators
-    // can upload, and only video files under 500MB.
     match /community-videos/{fileName} {
       allow read: if true;
       allow write: if isAdminOrModerator()
@@ -20,10 +18,23 @@ service firebase.storage {
                    && request.resource.contentType.matches('video/.*');
     }
 
-    // Representative photos — same pattern.
     match /representative-photos/{fileName} {
       allow read: if true;
       allow write: if isAdminOrModerator()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    match /academy-videos/{fileName} {
+      allow read: if true;
+      allow write: if isAdminOrModerator()
+                   && request.resource.size < 500 * 1024 * 1024
+                   && request.resource.contentType.matches('video/.*');
+    }
+
+    match /proposal-photos/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
                    && request.resource.size < 10 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }

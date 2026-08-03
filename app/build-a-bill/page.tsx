@@ -2,12 +2,12 @@
 
 // app/build-a-bill/page.tsx
 //
-// Real gate, honest placeholder: the full wizard (problem -> evidence ->
-// $10 payment -> submission -> admin review -> Community Billboard) is its
-// own build. This page does the actual completion check now, runs the
-// pre-submission readiness checklist, and tells people exactly what to
-// expect once the full builder ships — no dead links, no overpromising a
-// feature that doesn't exist yet.
+// Academy completion is now a RECOMMENDATION, not a gate. Seeing what's
+// possible (the Billboard) is what should pull people in — making them
+// do homework before they're even allowed to see what building a
+// proposal looks like was working against that. The readiness checklist
+// still runs regardless; that's the actual quality bar now, along with
+// admin review and (later) payment.
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -29,6 +29,7 @@ export default function BuildABillPage() {
   const { loading, isComplete, completedCount, totalLessons } = useAcademyCompletion();
   const { uid } = useAnonymousIdentity();
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [dismissedNudge, setDismissedNudge] = useState(false);
 
   const storageKey = uid ? `citizenVoice.billChecklist.${uid}` : null;
 
@@ -49,85 +50,81 @@ export default function BuildABillPage() {
   return (
     <main className="min-h-screen bg-[#0E1225] text-white">
       <TopNav />
-      <div className="max-w-xl mx-auto px-6 py-16 text-center">
-        {loading && <p className="text-white/40">Loading…</p>}
+      <div className="max-w-xl mx-auto px-6 py-16">
+        <h1 className="text-2xl font-semibold text-center">Build a Bill</h1>
+        <p className="mt-3 text-white/60 text-center">
+          Before you start, make sure you've actually got what you need —
+          check off each one honestly:
+        </p>
 
-        {!loading && !isComplete && (
-          <>
-            <h1 className="text-2xl font-semibold">Bill Lab is locked for now</h1>
-            <p className="mt-3 text-white/60">
-              Finish Civic Academy first — {completedCount} of {totalLessons}{" "}
-              lessons done. It only takes a few minutes, and it's what makes
-              a proposal you build here actually well put-together.
+        {!loading && !isComplete && !dismissedNudge && (
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm text-white/80">
+                📖 Most people find Civic Academy's 6 quick lessons make
+                their proposal way stronger — {completedCount} of {totalLessons} done.
+              </p>
+              <Link href="/academy" className="text-sm text-[#00E5C3] mt-1 inline-block">
+                Take a look →
+              </Link>
+            </div>
+            <button
+              onClick={() => setDismissedNudge(true)}
+              className="text-white/40 hover:text-white/70 shrink-0"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        <div className="mt-6 space-y-2">
+          {CHECKLIST_ITEMS.map((item) => (
+            <label
+              key={item.id}
+              className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 cursor-pointer
+                         hover:border-[#00E5C3]/30 transition-colors"
+            >
+              <input
+                type="checkbox"
+                checked={!!checked[item.id]}
+                onChange={() => toggle(item.id)}
+                className="mt-1 accent-[#00E5C3]"
+              />
+              <span className="text-sm text-white/80">{item.label}</span>
+            </label>
+          ))}
+        </div>
+
+        {allChecked ? (
+          <div className="mt-6 rounded-2xl bg-[#00E5C3]/10 border border-[#00E5C3]/40 px-5 py-4 text-center">
+            <p className="text-[#00E5C3] font-medium">You're ready.</p>
+            <p className="text-white/60 text-sm mt-1">
+              Answer a few guided questions, submit for a quick review, and
+              once approved it goes live on the Community Billboard for
+              people to read, upvote, and discuss.
             </p>
             <Link
-              href="/academy"
-              className="mt-6 inline-block rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
+              href="/build-a-bill/wizard"
+              className="mt-4 inline-block rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
                          hover:opacity-90 transition-opacity"
             >
-              Continue Civic Academy
+              Start Building
             </Link>
-          </>
+          </div>
+        ) : (
+          <p className="mt-4 text-white/40 text-sm text-center">
+            Check off everything above to start building.
+          </p>
         )}
 
-        {!loading && isComplete && (
-          <>
-            <h1 className="text-2xl font-semibold">🎉 Bill Lab is unlocked</h1>
-            <p className="mt-3 text-white/60">
-              Before you start, make sure you've actually got what you need
-              — check off each one honestly:
-            </p>
-
-            <div className="mt-6 space-y-2 text-left">
-              {CHECKLIST_ITEMS.map((item) => (
-                <label
-                  key={item.id}
-                  className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 cursor-pointer
-                             hover:border-[#00E5C3]/30 transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!checked[item.id]}
-                    onChange={() => toggle(item.id)}
-                    className="mt-1 accent-[#00E5C3]"
-                  />
-                  <span className="text-sm text-white/80">{item.label}</span>
-                </label>
-              ))}
-            </div>
-
-            {allChecked ? (
-              <div className="mt-6 rounded-2xl bg-[#00E5C3]/10 border border-[#00E5C3]/40 px-5 py-4">
-                <p className="text-[#00E5C3] font-medium">You're ready.</p>
-                <p className="text-white/60 text-sm mt-1">
-                  Here's what happens: you'll answer a few guided questions,
-                  submit it for a quick review, and once approved it goes
-                  live on the Community Billboard for people to read,
-                  upvote, and discuss.
-                </p>
-                <Link
-                  href="/build-a-bill/wizard"
-                  className="mt-4 inline-block rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
-                             hover:opacity-90 transition-opacity"
-                >
-                  Start Building
-                </Link>
-              </div>
-            ) : (
-              <p className="mt-4 text-white/40 text-sm">
-                Check off everything above to start building.
-              </p>
-            )}
-
-            <p className="mt-6 text-xs text-white/40">
-              Being on the Community Billboard doesn't guarantee a proposal
-              becomes law — but broad, organized community support is
-              consistently one of the biggest factors in whether an idea
-              gets a lawmaker's attention at all. That's what this board is
-              built to help you build.
-            </p>
-          </>
-        )}
+        <p className="mt-6 text-xs text-white/40 text-center">
+          Being on the Community Billboard doesn't guarantee a proposal
+          becomes law — but broad, organized community support is
+          consistently one of the biggest factors in whether an idea gets
+          a lawmaker's attention at all. That's what this board is built to
+          help you build.
+        </p>
       </div>
     </main>
   );

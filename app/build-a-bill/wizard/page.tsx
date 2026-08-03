@@ -22,7 +22,7 @@ type Step = typeof STEPS[number];
 export default function WizardPage() {
   const router = useRouter();
   const { displayName } = useAnonymousIdentity();
-  const { loading, isComplete } = useAcademyCompletion();
+  const { loading } = useAcademyCompletion();
 
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState({
@@ -92,17 +92,6 @@ export default function WizardPage() {
       <main className="min-h-screen bg-[#0E1225] text-white">
         <TopNav />
         <p className="text-center mt-10 text-white/40">Loading…</p>
-      </main>
-    );
-  }
-
-  if (!isComplete) {
-    return (
-      <main className="min-h-screen bg-[#0E1225] text-white">
-        <TopNav />
-        <div className="max-w-xl mx-auto px-6 py-16 text-center">
-          <p className="text-white/60">Finish Civic Academy to unlock this.</p>
-        </div>
       </main>
     );
   }

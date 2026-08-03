@@ -56,9 +56,9 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Build a Bill only ever appears here once Academy is actually done —
-            this is the one place a member reliably lands after finishing. */}
-        {!loading && isComplete && (
+        {/* Build a Bill always shows now — Academy is a recommendation on
+            the way in, not a locked door. See build-a-bill/page.tsx. */}
+        {!loading && (
           <Link
             href="/build-a-bill"
             className="mt-4 block rounded-2xl bg-[#00E5C3]/10 border border-[#00E5C3]/40 px-6 py-5
