@@ -90,6 +90,38 @@ service cloud.firestore {
       allow write: if isModeratorOrAbove();
     }
 
+    // ---------- Community Bill Lab ----------
+    // Proposals are only ever created by the submitProposal Cloud
+    // Function (Admin SDK bypasses rules) — this re-verifies Academy
+    // completion server-side, which a client-side check alone can't
+    // enforce. Clients can read active/passed proposals and (as
+    // moderators) update status during review.
+    match /proposals/{proposalId} {
+      allow read: if true;
+      allow create: if false;
+      allow update: if isModeratorOrAbove();
+      allow delete: if isModeratorOrAbove();
+    }
+
+    match /proposalComments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isNotSuspended()
+                    && request.resource.data.authorId == request.auth.uid
+                    && request.resource.data.authorName is string
+                    && request.resource.data.authorName.size() > 0;
+      allow update, delete: if isSignedIn()
+                    && (resource.data.authorId == request.auth.uid || isModeratorOrAbove());
+    }
+
+    // Vote records are only ever created by the upvoteProposal Cloud
+    // Function, which also increments the denormalized counter on the
+    // proposal doc — keeps both in sync and prevents double-voting via
+    // direct client writes.
+    match /proposalUpvotes/{voteId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
     // ---------- Anonymous identity ----------
     // Every visitor is silently signed in via Firebase Anonymous Auth
     // (see lib/useAnonymousIdentity.ts) — no email/password, no visible

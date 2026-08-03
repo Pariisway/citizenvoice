@@ -100,31 +100,23 @@ export default function BuildABillPage() {
               <div className="mt-6 rounded-2xl bg-[#00E5C3]/10 border border-[#00E5C3]/40 px-5 py-4">
                 <p className="text-[#00E5C3] font-medium">You're ready.</p>
                 <p className="text-white/60 text-sm mt-1">
-                  The full proposal builder is still being built — here's
-                  exactly what happens once it's live:
+                  Here's what happens: you'll answer a few guided questions,
+                  submit it for a quick review, and once approved it goes
+                  live on the Community Billboard for people to read,
+                  upvote, and discuss.
                 </p>
+                <Link
+                  href="/build-a-bill/wizard"
+                  className="mt-4 inline-block rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
+                             hover:opacity-90 transition-opacity"
+                >
+                  Start Building
+                </Link>
               </div>
             ) : (
               <p className="mt-4 text-white/40 text-sm">
-                Check off everything above to see what happens next.
+                Check off everything above to start building.
               </p>
-            )}
-
-            {allChecked && (
-              <div className="mt-6 space-y-3 text-left">
-                {[
-                  "Answer a few guided questions: the problem, who it affects, what should change, and your evidence.",
-                  "A small one-time fee unlocks proposal creation — this keeps the board focused on people who are serious about following through.",
-                  "Your proposal goes to our team for a quick review before it's posted publicly.",
-                  "Once approved, it's listed on the Community Billboard, under the exact city or area it affects — with a picture, a short summary, and a live discussion room attached.",
-                  "The community can upvote it, discuss it, and help it rise to the top of the board.",
-                ].map((step, i) => (
-                  <div key={i} className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 flex gap-3">
-                    <span className="text-[#00E5C3] font-medium shrink-0">{i + 1}.</span>
-                    <p className="text-white/70 text-sm">{step}</p>
-                  </div>
-                ))}
-              </div>
             )}
 
             <p className="mt-6 text-xs text-white/40">

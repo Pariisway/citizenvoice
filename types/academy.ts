@@ -24,22 +24,39 @@ export interface LessonProgress {
   updatedAt: string;
 }
 
-// ---- Forward stub for step 3 (Community Bill Lab) ----
-// Not used yet — defined now so the Academy completion-tracking data model
-// doesn't need to change shape when proposals ship.
-export type ProposalStatus = "queue" | "passed" | "archived";
+// ---- Community Bill Lab / Billboard ----
+export type ProposalStatus = "pending_review" | "active" | "passed" | "rejected";
 
 export interface Proposal {
   id: string;
   title: string;
   problem: string;
-  areaCityFips?: string;     // proposal is only listed under the area it affects
+  whoAffected: string;
+  proposedChange: string;
+  evidence: string;
+  photoUrl?: string;
+  areaLabel: string;         // human-readable, e.g. "Fairview Heights, IL"
+  areaCityFips?: string;
   areaCountyFips?: string;
   authorUid: string;
   authorName: string;
   status: ProposalStatus;
   upvoteCount: number;
   createdAt: string;
+  reviewedAt?: string;
+  reviewNote?: string;       // shown to author if rejected
   passedAt?: string;
-  passedBadgeLabel?: string; // shown on the public "community wins" page
+  passedBadgeLabel?: string; // shown on the Community Wins page
+  // TODO(payment): once Stripe is wired back in, add
+  // `paymentStatus: "paid" | "unpaid"` and gate creation on it server-side
+  // in functions/src/billLab/submitProposal.ts — see comment there.
+}
+
+export interface ProposalComment {
+  id: string;
+  proposalId: string;
+  authorId: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
 }

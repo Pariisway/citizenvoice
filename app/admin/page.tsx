@@ -15,6 +15,11 @@ export default function AdminDashboardPage() {
           href="/admin/videos"
         />
         <DashboardCard
+          title="Proposals"
+          description="Review, approve, or mark community proposals as passed."
+          href="/admin/proposals"
+        />
+        <DashboardCard
           title="Homepage Content"
           description="Edit the hero, mission, educational sections, and FAQ — live, no rebuild."
           href="/admin/homepage"
