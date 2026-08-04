@@ -10,8 +10,13 @@ export default function AdminDashboardPage() {
 
       <div className="mt-8 grid sm:grid-cols-2 gap-4">
         <DashboardCard
+          title="Communities"
+          description="Add the cities, counties, and neighborhoods that appear as cards on Community Chat."
+          href="/admin/communities"
+        />
+        <DashboardCard
           title="Upload a video"
-          description="Add a video to Citizen Chat — meeting recordings, candidate interviews, explainers."
+          description="Add a video to Civic Academy — meeting recordings, candidate interviews, explainers."
           href="/admin/videos"
         />
         <DashboardCard

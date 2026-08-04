@@ -61,6 +61,34 @@ export default function BillboardPage() {
           <Link href="/community-wins" className="text-[#00E5C3]">See what's passed →</Link>
         </p>
 
+        {!loading && proposals.length > 0 && (
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+            <p className="text-sm font-medium text-white/80">🔥 Top 10 This Week</p>
+            <p className="text-xs text-white/40 mt-0.5">
+              Sign a proposal's petition to push it up the list.
+            </p>
+            <div className="mt-3 space-y-1">
+              {proposals.slice(0, 10).map((p, i) => (
+                <Link
+                  key={p.id}
+                  href={`/billboard/proposal?id=${p.id}`}
+                  className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-white/5 transition-colors"
+                >
+                  <span
+                    className={`shrink-0 w-6 text-center text-sm font-semibold ${
+                      i < 3 ? "text-[#00E5C3]" : "text-white/40"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="flex-1 text-sm truncate">{p.title}</span>
+                  <span className="shrink-0 text-xs text-white/40">✍️ {p.upvoteCount}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {loading && <p className="mt-10 text-white/40 text-sm">Loading…</p>}
         {!loading && proposals.length === 0 && (
           <p className="mt-10 text-white/50">No proposals yet — be the first.</p>
@@ -89,7 +117,7 @@ export default function BillboardPage() {
                   className="text-sm flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5
                              hover:border-[#00E5C3]/50 transition-colors disabled:opacity-50"
                 >
-                  ▲ {p.upvoteCount}
+                  ✍️ {votedIds.has(p.id) ? "Signed" : "Sign"} · {p.upvoteCount}
                 </button>
                 <button
                   onClick={() => handleShare(p)}

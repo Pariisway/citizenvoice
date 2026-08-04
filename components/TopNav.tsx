@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/", label: "Home", icon: "🏠" },
   { href: "/billboard", label: "Billboard", icon: "📜" },
-  { href: "/citizen-chat", label: "Chat", icon: "🎥" },
+  { href: "/community-chat", label: "Community", icon: "💬" },
   { href: "/academy", label: "Academy", icon: "📖" },
   { href: "/find-my-representatives", label: "Find Reps", icon: "🏛️" },
   { href: "/dashboard", label: "Dashboard", icon: "👤" },
