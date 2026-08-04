@@ -129,25 +129,39 @@ service cloud.firestore {
     // direct client writes. Petition-signing stays open to anonymous
     // visitors on purpose — it's the on-ramp into membership, not a
     // member-only action.
+    //
+    // These now hold real PII (full legal name + email — see
+    // upvoteProposal.ts) so they can eventually back a real petition
+    // handed to a legislator. Only the signer themselves and
+    // moderators+ (for compiling/exporting signatures) can read them —
+    // NOT anyone signed in, unlike most other collections here.
     match /proposalUpvotes/{voteId} {
-      allow read: if isSignedIn();
+      allow read: if isModeratorOrAbove() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow write: if false;
     }
 
-    // ---------- Voice room presence (per-proposal live chat) ----------
+    // ---------- Voice room presence ----------
     // Written directly by the client on join/leave — not security
     // sensitive (just "who's in the room right now"), but scoped so
-    // people can only write their own presence doc. Generalized beyond
-    // proposals: docs also carry `roomId`/`roomType` for Community Chat
-    // voice rooms (see CommunityVoiceRoom.tsx) — this rule doesn't need
-    // to change for that, since it only ever validates uid ownership.
-    // The real speaking/listening gate is generateAgoraToken.ts (member
-    // only) — this rule is defense in depth, not the primary control.
+    // people can only write their own presence doc.
     match /voiceRoomPresence/{docId} {
       allow read: if true;
-      allow create: if isMember() && isNotSuspended()
-                    && request.resource.data.uid == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+      // Community rooms are open to everyone; proposal (bill) rooms are
+      // member-only — differentiated by the roomType field the client
+      // sets (see CommunityVoiceRoom.tsx vs ProposalVoiceRoom.tsx). The
+      // real gate for proposal rooms is generateAgoraToken.ts; this is
+      // defense in depth.
+      allow create: if isSignedIn() && isNotSuspended()
+                    && request.resource.data.uid == request.auth.uid
+                    && (
+                         (('roomType' in request.resource.data) && request.resource.data.roomType == 'community')
+                         || isMember()
+                       );
+      // Moderators can remove someone from a room's live participant list
+      // (see /admin/community-moderation) in addition to people removing
+      // their own presence on leave.
+      allow delete: if isSignedIn()
+                    && (resource.data.uid == request.auth.uid || isModeratorOrAbove());
       allow update: if false;
     }
 
@@ -160,11 +174,11 @@ service cloud.firestore {
       allow create, update, delete: if isModeratorOrAbove();
     }
 
-    // Text messages inside a community room. Member-only to post —
-    // anyone can read/browse without an account.
+    // Text messages inside a community room. Open to everyone — Community
+    // Chat has no membership requirement, only bill discussion does.
     match /communityMessages/{messageId} {
       allow read: if true;
-      allow create: if isMember() && isNotSuspended()
+      allow create: if isSignedIn() && isNotSuspended()
                     && request.resource.data.authorId == request.auth.uid
                     && request.resource.data.authorName is string
                     && request.resource.data.authorName.size() > 0;

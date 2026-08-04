@@ -16,7 +16,6 @@ import {
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { firebaseApp } from "@/lib/firebaseClient";
 import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
-import DisplayNamePrompt from "@/components/DisplayNamePrompt";
 import MicPermissionGate from "@/components/MicPermissionGate";
 import QuickAccountPrompt from "@/components/QuickAccountPrompt";
 
@@ -25,8 +24,12 @@ interface Participant {
   displayName: string;
 }
 
+// Bill discussion is member-only. There's no separate "pick a name" step
+// here — by the time someone is a member, they already have one (set
+// during quick-account signup). Non-members just get a straight
+// "create a free account" CTA instead of the mic flow.
 export default function ProposalVoiceRoom({ proposalId }: { proposalId: string }) {
-  const { uid, displayName, needsName, isMember } = useAnonymousIdentity();
+  const { uid, displayName, isMember } = useAnonymousIdentity();
   const [joined, setJoined] = useState(false);
   const [muted, setMuted] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -145,13 +148,9 @@ export default function ProposalVoiceRoom({ proposalId }: { proposalId: string }
         </button>
       )}
 
-      {!joined && showJoinPrompt && needsName && (
-        <div className="mt-3"><DisplayNamePrompt onReady={() => {}} /></div>
-      )}
-
-      {!joined && showJoinPrompt && !needsName && !isMember && (
+      {!joined && showJoinPrompt && !isMember && (
         <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-          <p className="text-sm text-white/70">Voice chat is a member feature.</p>
+          <p className="text-sm text-white/70">Bill discussion is a member feature.</p>
           <button
             onClick={() => setShowQuickAccount(true)}
             className="mt-2 rounded-lg bg-[#00E5C3] text-[#0E1225] font-medium px-4 py-2 text-sm hover:opacity-90 transition-opacity"
@@ -161,7 +160,7 @@ export default function ProposalVoiceRoom({ proposalId }: { proposalId: string }
         </div>
       )}
 
-      {!joined && showJoinPrompt && !needsName && isMember && (
+      {!joined && showJoinPrompt && isMember && (
         <div className="mt-3"><MicPermissionGate onGranted={handleMicGranted} /></div>
       )}
 

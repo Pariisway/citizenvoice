@@ -11,6 +11,7 @@ export interface Community {
   name: string;              // e.g. "St. Clair County", "Fairview Heights"
   type: CommunityType;
   description?: string;
+  photoUrl?: string;
   areaCityFips?: string;
   areaCountyFips?: string;
   memberCount?: number;      // denormalized, informational only

@@ -9,21 +9,20 @@ import { useSearchParams } from "next/navigation";
 import {
   getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc,
 } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { firebaseApp } from "@/lib/firebaseClient";
 import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import type { Proposal, ProposalComment } from "@/types/academy";
 import TopNav from "@/components/TopNav";
-import DisplayNamePrompt from "@/components/DisplayNamePrompt";
 import QuickAccountPrompt from "@/components/QuickAccountPrompt";
 import ProposalVoiceRoom from "@/components/ProposalVoiceRoom";
 import ProposalTemplate from "@/components/ProposalTemplate";
+import PetitionSignModal from "@/components/PetitionSignModal";
 import { downloadProposalPdf } from "@/lib/generateProposalPdf";
 
 function ProposalProfile() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const { uid, displayName, needsName, isMember } = useAnonymousIdentity();
+  const { uid, displayName, isMember } = useAnonymousIdentity();
 
   const [proposal, setProposal] = useState<Proposal | null | undefined>(undefined);
   const [comments, setComments] = useState<ProposalComment[]>([]);
@@ -55,11 +54,9 @@ function ProposalProfile() {
     return unsub;
   }, [id]);
 
-  async function handleUpvote() {
-    if (!id || voted) return;
-    const functions = getFunctions(firebaseApp);
-    const upvote = httpsCallable(functions, "upvoteProposal");
-    await upvote({ proposalId: id });
+  const [showPetitionModal, setShowPetitionModal] = useState(false);
+
+  function handleSigned() {
     setVoted(true);
     setProposal((p) => (p ? { ...p, upvoteCount: p.upvoteCount + 1 } : p));
   }
@@ -130,7 +127,7 @@ function ProposalProfile() {
 
       <div className="mt-4 flex flex-wrap gap-3">
         <button
-          onClick={handleUpvote}
+          onClick={() => setShowPetitionModal(true)}
           disabled={voted}
           className="rounded-xl border border-white/20 px-5 py-2.5 text-sm hover:border-[#00E5C3]/50 transition-colors disabled:opacity-50"
         >
@@ -187,9 +184,7 @@ function ProposalProfile() {
           ))}
         </div>
 
-        {needsName ? (
-          <div className="mt-4"><DisplayNamePrompt /></div>
-        ) : !isMember ? (
+        {!isMember ? (
           <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
             <p className="text-sm text-white/70">Joining the discussion is a member feature.</p>
             <button
@@ -218,6 +213,14 @@ function ProposalProfile() {
       </div>
 
       <QuickAccountPrompt open={showQuickAccount} onClose={() => setShowQuickAccount(false)} />
+      {id && (
+        <PetitionSignModal
+          open={showPetitionModal}
+          proposalId={id}
+          onClose={() => setShowPetitionModal(false)}
+          onSigned={handleSigned}
+        />
+      )}
     </div>
   );
 }

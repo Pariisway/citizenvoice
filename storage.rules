@@ -25,6 +25,14 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');
     }
 
+    // Community Chat room cover photos — admin/moderator only.
+    match /community-photos/{fileName} {
+      allow read: if true;
+      allow write: if isAdminOrModerator()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
     match /academy-videos/{fileName} {
       allow read: if true;
       allow write: if isAdminOrModerator()

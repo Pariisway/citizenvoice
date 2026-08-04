@@ -14,18 +14,19 @@ import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import type { Community, CommunityMessage } from "@/types/community";
 import TopNav from "@/components/TopNav";
 import DisplayNamePrompt from "@/components/DisplayNamePrompt";
-import QuickAccountPrompt from "@/components/QuickAccountPrompt";
 import CommunityVoiceRoom from "@/components/CommunityVoiceRoom";
 
+// Community Chat is open to everyone — the only requirement to post or
+// speak is a display name, same as before. Bill discussion (see
+// /billboard/proposal) is the one that's member-only.
 function CommunityRoom() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const { uid, displayName, needsName, isMember } = useAnonymousIdentity();
+  const { uid, displayName, needsName } = useAnonymousIdentity();
 
   const [community, setCommunity] = useState<Community | null | undefined>(undefined);
   const [messages, setMessages] = useState<CommunityMessage[]>([]);
   const [messageText, setMessageText] = useState("");
-  const [showQuickAccount, setShowQuickAccount] = useState(false);
 
   useEffect(() => {
     if (!id) { setCommunity(null); return; }
@@ -91,16 +92,6 @@ function CommunityRoom() {
 
         {needsName ? (
           <div className="mt-4"><DisplayNamePrompt /></div>
-        ) : !isMember ? (
-          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-            <p className="text-sm text-white/70">Joining the discussion is a member feature.</p>
-            <button
-              onClick={() => setShowQuickAccount(true)}
-              className="mt-2 rounded-lg bg-[#00E5C3] text-[#0E1225] font-medium px-4 py-2 text-sm hover:opacity-90 transition-opacity"
-            >
-              Create a free account
-            </button>
-          </div>
         ) : (
           <form onSubmit={handleSend} className="mt-4 flex gap-2">
             <input
@@ -118,8 +109,6 @@ function CommunityRoom() {
           </form>
         )}
       </div>
-
-      <QuickAccountPrompt open={showQuickAccount} onClose={() => setShowQuickAccount(false)} />
     </div>
   );
 }

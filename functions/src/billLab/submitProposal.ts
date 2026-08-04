@@ -55,6 +55,15 @@ export const submitProposal = functions.onCall(async (request) => {
   }
   const uid = request.auth.uid;
 
+  // Creating a bill is member-only, same as bill discussion and voice —
+  // browsing/reading is open to everyone, this is not.
+  if (request.auth.token.firebase?.sign_in_provider === "anonymous") {
+    throw new functions.HttpsError(
+      "permission-denied",
+      "Create a free account to submit a proposal."
+    );
+  }
+
   // Re-verify Academy completion server-side — the client-side checklist
   // and gate are UX, not security; someone could otherwise call this
   // function directly and skip Academy entirely.

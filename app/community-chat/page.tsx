@@ -78,22 +78,29 @@ export default function CommunityChatPage() {
               <Link
                 key={c.id}
                 href={`/community-chat/room?id=${c.id}`}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4
+                className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden
                            hover:border-[#00E5C3]/40 transition-colors block"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl">{meta.emoji}</span>
+                <div className="h-28 bg-white/5 flex items-center justify-center relative">
+                  {c.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.photoUrl} alt={c.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl">{meta.emoji}</span>
+                  )}
                   {live > 0 && (
-                    <span className="text-xs rounded-full bg-[#00E5C3]/15 text-[#00E5C3] border border-[#00E5C3]/40 px-2 py-0.5">
+                    <span className="absolute top-2 right-2 text-xs rounded-full bg-[#00E5C3]/15 text-[#00E5C3] border border-[#00E5C3]/40 px-2 py-0.5 backdrop-blur">
                       ● {live} live
                     </span>
                   )}
                 </div>
-                <p className="font-medium mt-3">{c.name}</p>
-                <p className="text-xs text-white/40 mt-0.5">{meta.label}</p>
-                {c.description && (
-                  <p className="text-sm text-white/50 mt-2 line-clamp-2">{c.description}</p>
-                )}
+                <div className="p-4">
+                  <p className="font-medium">{c.name}</p>
+                  <p className="text-xs text-white/40 mt-0.5">{meta.label}</p>
+                  {c.description && (
+                    <p className="text-sm text-white/50 mt-2 line-clamp-2">{c.description}</p>
+                  )}
+                </div>
               </Link>
             );
           })}

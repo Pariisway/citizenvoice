@@ -2,17 +2,18 @@
 
 // app/dashboard/page.tsx
 //
-// The member's home base. Right now this is mostly an Academy progress
-// view + the Build a Bill entry point — grows as proposals/notifications
-// ship (followed bills, action history, etc. land here later).
+// The member's home base: profile (editable), Academy progress, Build a
+// Bill entry point, their own proposals, and a Meet the Team preview.
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getAuth, signOut } from "firebase/auth";
 import { getFirestore, collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { firebaseApp } from "@/lib/firebaseClient";
 import TopNav from "@/components/TopNav";
-import DisplayNamePrompt from "@/components/DisplayNamePrompt";
+import ProfileEditor from "@/components/ProfileEditor";
 import QuickAccountPrompt from "@/components/QuickAccountPrompt";
+import { TeamCard, useTeamMembers } from "@/components/TeamCards";
 import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import { useAcademyCompletion } from "@/lib/useAcademyCompletion";
 import { downloadProposalPdf } from "@/lib/generateProposalPdf";
@@ -26,10 +27,12 @@ const STATUS_LABEL: Record<Proposal["status"], string> = {
 };
 
 export default function DashboardPage() {
-  const { uid, displayName, photoUrl, ready, isMember } = useAnonymousIdentity();
+  const { uid, displayName, ready, isMember } = useAnonymousIdentity();
   const { loading, isComplete, completedCount, totalLessons } = useAcademyCompletion();
   const [myProposals, setMyProposals] = useState<Proposal[] | null>(null);
   const [showQuickAccount, setShowQuickAccount] = useState(false);
+  const [quickAccountMode, setQuickAccountMode] = useState<"choice" | "signin">("choice");
+  const teamMembers = useTeamMembers();
 
   const initial = displayName?.trim()?.[0]?.toUpperCase() ?? "?";
 
@@ -42,6 +45,11 @@ export default function DashboardPage() {
       setMyProposals(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Proposal)));
     });
   }, [uid, isMember]);
+
+  async function handleSignOut() {
+    await signOut(getAuth(firebaseApp));
+    window.location.href = "/";
+  }
 
   if (ready && !isMember) {
     return (
@@ -58,18 +66,30 @@ export default function DashboardPage() {
           <h1 className="mt-4 text-2xl font-semibold">Your dashboard is a member feature</h1>
           <p className="mt-2 text-white/60">
             Create a free account (10 seconds, no forms) to get a dashboard, join
-            voice chat, and post in discussions — everything you've already done
-            here stays under your name.
+            bill discussions, and vote on proposals — everything you've already
+            done here stays under your name.
           </p>
-          <button
-            onClick={() => setShowQuickAccount(true)}
-            className="mt-6 rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
-                       hover:opacity-90 transition-opacity"
-          >
-            Create a free account
-          </button>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <button
+              onClick={() => { setQuickAccountMode("choice"); setShowQuickAccount(true); }}
+              className="rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
+                         hover:opacity-90 transition-opacity"
+            >
+              Create a free account
+            </button>
+            <button
+              onClick={() => { setQuickAccountMode("signin"); setShowQuickAccount(true); }}
+              className="text-sm text-white/50 hover:text-white/80"
+            >
+              Already have an account? Sign in
+            </button>
+          </div>
         </div>
-        <QuickAccountPrompt open={showQuickAccount} onClose={() => setShowQuickAccount(false)} />
+        <QuickAccountPrompt
+          open={showQuickAccount}
+          onClose={() => setShowQuickAccount(false)}
+          initialMode={quickAccountMode}
+        />
       </main>
     );
   }
@@ -78,32 +98,23 @@ export default function DashboardPage() {
     <main className="min-h-screen bg-[#0E1225] text-white">
       <TopNav />
       <div className="max-w-xl mx-auto px-6 py-16">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {photoUrl ? (
-          <img
-            src={photoUrl}
-            alt={displayName ?? "Your profile picture"}
-            className="w-16 h-16 rounded-full object-cover border border-white/10"
-          />
-        ) : (
-          <div
-            className="w-16 h-16 rounded-full bg-white/10 border border-white/10
-                       flex items-center justify-center text-xl font-semibold text-white/60"
-            aria-hidden
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">
+            {displayName ? `Welcome back, ${displayName}` : "Your Dashboard"}
+          </h1>
+          <button
+            onClick={handleSignOut}
+            className="text-xs text-white/40 hover:text-red-300 transition-colors shrink-0"
           >
-            {initial}
-          </div>
-        )}
-
-        <h1 className="mt-4 text-2xl font-semibold">
-          {displayName ? `Welcome back, ${displayName}` : "Your Dashboard"}
-        </h1>
-
-        <div className="mt-3">
-          <DisplayNamePrompt />
+            Sign out
+          </button>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-6">
+        <div className="mt-4">
+          <ProfileEditor />
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-6">
           <p className="text-sm text-white/50">Civic Academy</p>
           {loading ? (
             <p className="mt-2 text-white/40 text-sm">Loading…</p>
@@ -169,6 +180,18 @@ export default function DashboardPage() {
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {teamMembers !== null && teamMembers.length > 0 && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-white/50">Meet the Team</p>
+              <Link href="/team" className="text-xs text-[#00E5C3]/80 hover:text-[#00E5C3]">See all →</Link>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {teamMembers.slice(0, 4).map((m) => <TeamCard key={m.uid} member={m} size="sm" />)}
             </div>
           </div>
         )}

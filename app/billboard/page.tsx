@@ -5,17 +5,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getFirestore, collection, getDocs, query, where, orderBy } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { firebaseApp } from "@/lib/firebaseClient";
-import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import type { Proposal } from "@/types/academy";
 import TopNav from "@/components/TopNav";
+import PetitionSignModal from "@/components/PetitionSignModal";
 
 export default function BillboardPage() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
-  const { uid } = useAnonymousIdentity();
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
+  const [signingId, setSigningId] = useState<string | null>(null);
 
   async function load() {
     const db = getFirestore(firebaseApp);
@@ -30,15 +29,9 @@ export default function BillboardPage() {
     load();
   }, []);
 
-  async function handleUpvote(id: string) {
-    if (!uid || votedIds.has(id)) return;
-    const functions = getFunctions(firebaseApp);
-    const upvote = httpsCallable(functions, "upvoteProposal");
-    const result = await upvote({ proposalId: id });
+  function handleSigned(id: string) {
     setVotedIds((s) => new Set(s).add(id));
-    if (!(result.data as any).alreadyVoted) {
-      setProposals((ps) => ps.map((p) => (p.id === id ? { ...p, upvoteCount: p.upvoteCount + 1 } : p)));
-    }
+    setProposals((ps) => ps.map((p) => (p.id === id ? { ...p, upvoteCount: p.upvoteCount + 1 } : p)));
   }
 
   function handleShare(p: Proposal) {
@@ -112,7 +105,7 @@ export default function BillboardPage() {
               </Link>
               <div className="px-4 py-3 mt-2 flex items-center gap-3 border-t border-white/10">
                 <button
-                  onClick={() => handleUpvote(p.id)}
+                  onClick={() => setSigningId(p.id)}
                   disabled={votedIds.has(p.id)}
                   className="text-sm flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5
                              hover:border-[#00E5C3]/50 transition-colors disabled:opacity-50"
@@ -136,6 +129,15 @@ export default function BillboardPage() {
           ))}
         </div>
       </div>
+
+      {signingId && (
+        <PetitionSignModal
+          open={!!signingId}
+          proposalId={signingId}
+          onClose={() => setSigningId(null)}
+          onSigned={() => handleSigned(signingId)}
+        />
+      )}
     </main>
   );
 }

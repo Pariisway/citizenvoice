@@ -2,8 +2,9 @@
 //
 // Agora requires a signed token per user per channel (never expose your
 // Agora App Certificate to the client). This function mints one for
-// whoever calls it — but only members (anonymous session upgraded to a
-// real account, see QuickAccountPrompt.tsx), not anonymous browsers.
+// whoever calls it — Community Chat rooms are open to everyone; bill
+// (proposal) rooms require membership (an anonymous session upgraded to
+// a real account — see QuickAccountPrompt.tsx).
 //
 // Speaking vs. listening is controlled by Agora `role`. Moderators can
 // still mute/kick via Agora's RTM channel + the `voiceRooms` Firestore
@@ -40,21 +41,23 @@ export const generateAgoraToken = functions.onCall(
       throw new functions.HttpsError("unauthenticated", "Sign-in required.");
     }
 
-    // Voice chat is member-only: anyone can browse the site with zero
-    // sign-up, but joining a live room — listening or speaking — requires
-    // the free quick-account upgrade (see QuickAccountPrompt.tsx), which
-    // flips `sign_in_provider` off "anonymous" without losing the uid or
-    // anything already posted under it.
-    if (request.auth.token.firebase?.sign_in_provider === "anonymous") {
-      throw new functions.HttpsError(
-        "permission-denied",
-        "Create a free account to join voice chat."
-      );
-    }
-
+    // Bill/proposal voice rooms are member-only; Community Chat voice
+    // rooms (channelName starting "community-") stay open to everyone —
+    // only the discussion around actual proposals requires an account.
+    // See ProposalVoiceRoom.tsx vs CommunityVoiceRoom.tsx.
     const { channelName, role } = request.data as TokenRequest;
     if (!channelName) {
       throw new functions.HttpsError("invalid-argument", "channelName is required.");
+    }
+
+    if (
+      channelName.startsWith("proposal-") &&
+      request.auth.token.firebase?.sign_in_provider === "anonymous"
+    ) {
+      throw new functions.HttpsError(
+        "permission-denied",
+        "Create a free account to join bill discussions."
+      );
     }
 
     // Require a display name before granting a speaker token — keeps voice

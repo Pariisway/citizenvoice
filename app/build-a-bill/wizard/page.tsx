@@ -21,6 +21,7 @@ import { firebaseApp } from "@/lib/firebaseClient";
 import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import { useAcademyCompletion } from "@/lib/useAcademyCompletion";
 import TopNav from "@/components/TopNav";
+import QuickAccountPrompt from "@/components/QuickAccountPrompt";
 
 const STEPS = [
   "cover", "problem", "evidence", "area", "who", "change",
@@ -44,8 +45,9 @@ const STEP_LABELS: Record<Step, string> = {
 
 export default function WizardPage() {
   const router = useRouter();
-  const { displayName } = useAnonymousIdentity();
+  const { displayName, isMember } = useAnonymousIdentity();
   const { loading } = useAcademyCompletion();
+  const [showQuickAccount, setShowQuickAccount] = useState(false);
 
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState({
@@ -140,6 +142,28 @@ export default function WizardPage() {
       <main className="min-h-screen bg-[#0E1225] text-white">
         <TopNav />
         <p className="text-center mt-10 text-white/40">Loading…</p>
+      </main>
+    );
+  }
+
+  if (!isMember) {
+    return (
+      <main className="min-h-screen bg-[#0E1225] text-white">
+        <TopNav />
+        <div className="max-w-xl mx-auto px-6 py-16 text-center">
+          <h1 className="text-2xl font-semibold">Building a bill is a member feature</h1>
+          <p className="mt-2 text-white/60">
+            Create a free account to submit a proposal — 10 seconds, no forms.
+          </p>
+          <button
+            onClick={() => setShowQuickAccount(true)}
+            className="mt-6 rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
+                       hover:opacity-90 transition-opacity"
+          >
+            Create a free account
+          </button>
+        </div>
+        <QuickAccountPrompt open={showQuickAccount} onClose={() => setShowQuickAccount(false)} />
       </main>
     );
   }
