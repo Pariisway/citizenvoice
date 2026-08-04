@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  getFirestore, collection, addDoc, getDocs, orderBy, query, deleteDoc, doc,
+  getFirestore, collection, addDoc, getDocs, orderBy, query, deleteDoc, doc, updateDoc,
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { firebaseApp } from "@/lib/firebaseClient";
@@ -20,6 +20,10 @@ export default function AdminAcademyPage() {
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ title: string; hook: string; durationSeconds: number; cardContent: string }>({
+    title: "", hook: "", durationSeconds: 60, cardContent: "",
+  });
 
   async function loadLessons() {
     const db = getFirestore(firebaseApp);
@@ -167,14 +171,81 @@ export default function AdminAcademyPage() {
       <h2 className="mt-10 font-medium">{lessons.length} lessons</h2>
       <div className="mt-4 space-y-2">
         {lessons.map((l, i) => (
-          <div key={l.id} className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-white/40">Lesson {i + 1} · {l.durationSeconds}s</p>
-              <p className="font-medium">{l.hook}</p>
-            </div>
-            <button onClick={() => handleDelete(l.id)} className="text-sm text-red-300/70 hover:text-red-300">
-              Remove
-            </button>
+          <div key={l.id} className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
+            {editingId === l.id ? (
+              <div className="space-y-2">
+                <input
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  placeholder="Internal title"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <input
+                  value={editForm.hook}
+                  onChange={(e) => setEditForm({ ...editForm, hook: e.target.value })}
+                  placeholder="Hook question"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <input
+                  type="number"
+                  value={editForm.durationSeconds}
+                  onChange={(e) => setEditForm({ ...editForm, durationSeconds: Number(e.target.value) })}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <textarea
+                  value={editForm.cardContent}
+                  onChange={(e) => setEditForm({ ...editForm, cardContent: e.target.value })}
+                  rows={3}
+                  placeholder="Card text"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      const db = getFirestore(firebaseApp);
+                      await updateDoc(doc(db, "lessons", l.id), {
+                        title: editForm.title.trim(),
+                        hook: editForm.hook.trim(),
+                        durationSeconds: editForm.durationSeconds,
+                        cardContent: editForm.cardContent.trim() || null,
+                      });
+                      setEditingId(null);
+                      await loadLessons();
+                    }}
+                    className="text-sm rounded-lg bg-[#00E5C3] text-[#0E1225] px-3 py-1.5"
+                  >
+                    Save
+                  </button>
+                  <button onClick={() => setEditingId(null)} className="text-sm rounded-lg border border-white/15 px-3 py-1.5">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-white/40">Lesson {i + 1} · {l.durationSeconds}s</p>
+                  <p className="font-medium">{l.hook}</p>
+                </div>
+                <div className="flex gap-3 shrink-0">
+                  <button
+                    onClick={() => {
+                      setEditingId(l.id);
+                      setEditForm({
+                        title: l.title, hook: l.hook, durationSeconds: l.durationSeconds,
+                        cardContent: l.cardContent ?? "",
+                      });
+                    }}
+                    className="text-sm text-[#00E5C3]/80 hover:text-[#00E5C3]"
+                  >
+                    Edit
+                  </button>
+                  <button onClick={() => handleDelete(l.id)} className="text-sm text-red-300/70 hover:text-red-300">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

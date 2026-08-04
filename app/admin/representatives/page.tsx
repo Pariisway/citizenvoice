@@ -17,6 +17,7 @@ import {
   query,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 import { firebaseApp } from "@/lib/firebaseClient";
 import type { OfficeLevel, Representative } from "@/types/civic";
@@ -53,6 +54,8 @@ export default function AdminRepresentativesPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState(emptyForm);
 
   async function loadReps() {
     setLoading(true);
@@ -66,6 +69,26 @@ export default function AdminRepresentativesPage() {
     loadReps();
   }, []);
 
+  function buildRepData(f: typeof emptyForm): Record<string, unknown> {
+    const data: Record<string, unknown> = {
+      fullName: f.fullName.trim(),
+      officeLevel: f.officeLevel,
+      officeTitle: f.officeTitle.trim(),
+      dataSource: "manual_curation",
+      lastVerifiedAt: new Date().toISOString(),
+    };
+    if (f.cityFips.trim()) data.cityFips = f.cityFips.trim();
+    if (f.countyFips.trim()) data.countyFips = f.countyFips.trim();
+    if (f.officialWebsite.trim()) data.officialWebsite = f.officialWebsite.trim();
+    if (f.phone.trim() || f.email.trim()) {
+      data.contact = {
+        ...(f.phone.trim() && { phone: f.phone.trim() }),
+        ...(f.email.trim() && { email: f.email.trim() }),
+      };
+    }
+    return data;
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -78,24 +101,7 @@ export default function AdminRepresentativesPage() {
     setSaving(true);
     try {
       const db = getFirestore(firebaseApp);
-      const data: Record<string, unknown> = {
-        fullName: form.fullName.trim(),
-        officeLevel: form.officeLevel,
-        officeTitle: form.officeTitle.trim(),
-        dataSource: "manual_curation",
-        lastVerifiedAt: new Date().toISOString(),
-      };
-      if (form.cityFips.trim()) data.cityFips = form.cityFips.trim();
-      if (form.countyFips.trim()) data.countyFips = form.countyFips.trim();
-      if (form.officialWebsite.trim()) data.officialWebsite = form.officialWebsite.trim();
-      if (form.phone.trim() || form.email.trim()) {
-        data.contact = {
-          ...(form.phone.trim() && { phone: form.phone.trim() }),
-          ...(form.email.trim() && { email: form.email.trim() }),
-        };
-      }
-
-      await addDoc(collection(db, "representatives"), data);
+      await addDoc(collection(db, "representatives"), buildRepData(form));
       setForm(emptyForm);
       await loadReps();
     } catch (err: any) {
@@ -109,6 +115,27 @@ export default function AdminRepresentativesPage() {
     if (!confirm("Remove this representative?")) return;
     const db = getFirestore(firebaseApp);
     await deleteDoc(doc(db, "representatives", id));
+    await loadReps();
+  }
+
+  function startEdit(rep: Representative) {
+    setEditingId(rep.id);
+    setEditForm({
+      fullName: rep.fullName,
+      officeLevel: rep.officeLevel,
+      officeTitle: rep.officeTitle,
+      cityFips: rep.cityFips ?? "",
+      countyFips: rep.countyFips ?? "",
+      phone: rep.contact?.phone ?? "",
+      email: rep.contact?.email ?? "",
+      officialWebsite: rep.officialWebsite ?? "",
+    });
+  }
+
+  async function saveEdit(id: string) {
+    const db = getFirestore(firebaseApp);
+    await updateDoc(doc(db, "representatives", id), buildRepData(editForm));
+    setEditingId(null);
     await loadReps();
   }
 
@@ -209,20 +236,82 @@ export default function AdminRepresentativesPage() {
         {reps.map((rep) => (
           <div
             key={rep.id}
-            className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 flex items-center justify-between"
+            className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3"
           >
-            <div>
-              <p className="font-medium">{rep.fullName}</p>
-              <p className="text-sm text-white/50">
-                {rep.officeTitle} · {rep.dataSource === "manual_curation" ? "manually entered" : rep.dataSource}
-              </p>
-            </div>
-            <button
-              onClick={() => handleDelete(rep.id)}
-              className="text-sm text-red-300/70 hover:text-red-300"
-            >
-              Remove
-            </button>
+            {editingId === rep.id ? (
+              <div className="space-y-2">
+                <input
+                  value={editForm.fullName}
+                  onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                  placeholder="Full name"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <select
+                  value={editForm.officeLevel}
+                  onChange={(e) => setEditForm({ ...editForm, officeLevel: e.target.value as OfficeLevel })}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                >
+                  {OFFICE_LEVELS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <input
+                  value={editForm.officeTitle}
+                  onChange={(e) => setEditForm({ ...editForm, officeTitle: e.target.value })}
+                  placeholder="Office title"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <input
+                  value={editForm.cityFips}
+                  onChange={(e) => setEditForm({ ...editForm, cityFips: e.target.value })}
+                  placeholder="City FIPS"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <input
+                  value={editForm.countyFips}
+                  onChange={(e) => setEditForm({ ...editForm, countyFips: e.target.value })}
+                  placeholder="County FIPS"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <input
+                  value={editForm.officialWebsite}
+                  onChange={(e) => setEditForm({ ...editForm, officialWebsite: e.target.value })}
+                  placeholder="Official website"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <input
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  placeholder="Phone"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <input
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  placeholder="Email"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => saveEdit(rep.id)} className="text-sm rounded-lg bg-[#00E5C3] text-[#0E1225] px-3 py-1.5">Save</button>
+                  <button onClick={() => setEditingId(null)} className="text-sm rounded-lg border border-white/15 px-3 py-1.5">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{rep.fullName}</p>
+                  <p className="text-sm text-white/50">
+                    {rep.officeTitle} · {rep.dataSource === "manual_curation" ? "manually entered" : rep.dataSource}
+                  </p>
+                </div>
+                <div className="flex gap-3 shrink-0">
+                  <button onClick={() => startEdit(rep)} className="text-sm text-[#00E5C3]/80 hover:text-[#00E5C3]">
+                    Edit
+                  </button>
+                  <button onClick={() => handleDelete(rep.id)} className="text-sm text-red-300/70 hover:text-red-300">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

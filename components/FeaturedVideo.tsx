@@ -10,6 +10,7 @@ import Link from "next/link";
 import { getFirestore, collection, getDocs, orderBy, query, limit } from "firebase/firestore";
 import { firebaseApp } from "@/lib/firebaseClient";
 import type { CommunityVideo } from "@/types/civic";
+import VideoPlayer from "@/components/VideoPlayer";
 
 export default function FeaturedVideo() {
   const [video, setVideo] = useState<CommunityVideo | null | undefined>(undefined);
@@ -38,12 +39,7 @@ export default function FeaturedVideo() {
 
         {video && (
           <div className="mt-6 rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03]">
-            <video
-              src={video.playbackUrl}
-              controls
-              className="w-full aspect-video bg-black"
-              preload="metadata"
-            />
+            <VideoPlayer video={video} />
             <div className="px-5 py-4">
               <p className="font-medium">{video.title}</p>
               {video.description && (

@@ -5,11 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/dashboard", label: "Dashboard", icon: "🏠" },
-  { href: "/academy", label: "Academy", icon: "📖" },
+  { href: "/", label: "Home", icon: "🏠" },
   { href: "/billboard", label: "Billboard", icon: "📜" },
-  { href: "/find-my-representatives", label: "Find Reps", icon: "🏛️" },
   { href: "/citizen-chat", label: "Chat", icon: "🎥" },
+  { href: "/academy", label: "Academy", icon: "📖" },
+  { href: "/find-my-representatives", label: "Find Reps", icon: "🏛️" },
+  { href: "/dashboard", label: "Dashboard", icon: "👤" },
 ];
 
 export default function TopNav() {
@@ -18,17 +19,8 @@ export default function TopNav() {
 
   return (
     <nav className="border-b border-white/10 px-6 py-3">
-      <div className="max-w-5xl mx-auto flex items-center justify-between">
-        <Link
-          href="/"
-          className="font-semibold text-lg text-white hover:text-[#00E5C3] transition-colors whitespace-nowrap"
-        >
-          Citizen Voice
-        </Link>
-
-        {/* Desktop links — a tight pill cluster right next to the logo,
-            not floated to a mathematically-centered position far away
-            from it. */}
+      <div className="max-w-5xl mx-auto flex items-center justify-center">
+        {/* Desktop links */}
         <div className="hidden sm:flex items-center gap-1 rounded-full bg-white/[0.03] border border-white/10 px-1.5 py-1.5">
           {LINKS.map((link) => {
             const active = pathname === link.href;

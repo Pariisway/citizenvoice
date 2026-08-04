@@ -48,6 +48,8 @@ export interface Representative {
   party?: string;              // Stored, but never surfaced with editorial framing
   districtId?: string;         // Links to a district doc, e.g. "IL-HD-114"
   cityId?: string;             // For local offices, links to /cities/{cityId}
+  cityFips?: string;           // Used for city-scoped queries (Find My Representatives, admin filtering)
+  countyFips?: string;         // Used for county-scoped queries
   termStart?: string;          // ISO date
   termEnd?: string;
   bio?: string;
@@ -78,8 +80,10 @@ export interface CommunityVideo {
   title: string;
   description?: string;
   category: VideoCategory;
-  storagePath: string;      // Firebase Storage path
-  playbackUrl: string;      // Public download URL, resolved at upload time
+  videoType?: "upload" | "youtube";  // absent = "upload", for videos created before this field existed
+  storagePath?: string;      // Firebase Storage path (upload only)
+  playbackUrl: string;       // Storage download URL (upload) or the YouTube watch URL (youtube)
+  youtubeId?: string;        // extracted 11-char video ID (youtube only)
   thumbnailUrl?: string;
   durationSeconds?: number;
   relatedRepresentativeId?: string;

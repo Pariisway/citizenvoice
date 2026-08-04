@@ -14,6 +14,7 @@ import type { CommunityVideo } from "@/types/civic";
 import AdSlot from "@/components/AdSlot";
 import TopNav from "@/components/TopNav";
 import WeeklyRhythm from "@/components/WeeklyRhythm";
+import VideoPlayer from "@/components/VideoPlayer";
 
 export default function CitizenChatPage() {
   const [videos, setVideos] = useState<CommunityVideo[]>([]);
@@ -51,12 +52,7 @@ export default function CitizenChatPage() {
             {videos.map((video, i) => (
               <div key={video.id}>
                 <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03]">
-                  <video
-                    src={video.playbackUrl}
-                    controls
-                    className="w-full aspect-video bg-black"
-                    preload="metadata"
-                  />
+                  <VideoPlayer video={video} />
                   <div className="px-4 py-3">
                     <p className="font-medium">{video.title}</p>
                     {video.description && (

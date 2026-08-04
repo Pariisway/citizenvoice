@@ -97,6 +97,12 @@ export default function BillboardPage() {
                 >
                   Share
                 </button>
+                <Link
+                  href={`/billboard/proposal?id=${p.id}`}
+                  className="text-sm rounded-lg border border-white/15 px-3 py-1.5 hover:border-[#00E5C3]/50 transition-colors"
+                >
+                  🎙️ Discuss
+                </Link>
               </div>
             </div>
           ))}

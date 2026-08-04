@@ -21,6 +21,10 @@ export default function AdminProposalsPage() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [badgeInput, setBadgeInput] = useState<Record<string, string>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    title: string; problem: string; whoAffected: string; proposedChange: string; evidence: string; areaLabel: string;
+  }>({ title: "", problem: "", whoAffected: "", proposedChange: "", evidence: "", areaLabel: "" });
 
   async function load() {
     setLoading(true);
@@ -44,6 +48,28 @@ export default function AdminProposalsPage() {
       reviewedAt: new Date().toISOString(),
       ...extra,
     });
+    await load();
+  }
+
+  function startEdit(p: Proposal) {
+    setEditingId(p.id);
+    setEditForm({
+      title: p.title, problem: p.problem, whoAffected: p.whoAffected,
+      proposedChange: p.proposedChange, evidence: p.evidence, areaLabel: p.areaLabel,
+    });
+  }
+
+  async function saveContentEdit(id: string) {
+    const db = getFirestore(firebaseApp);
+    await updateDoc(doc(db, "proposals", id), {
+      title: editForm.title.trim(),
+      problem: editForm.problem.trim(),
+      whoAffected: editForm.whoAffected.trim(),
+      proposedChange: editForm.proposedChange.trim(),
+      evidence: editForm.evidence.trim(),
+      areaLabel: editForm.areaLabel.trim(),
+    });
+    setEditingId(null);
     await load();
   }
 
@@ -73,14 +99,70 @@ export default function AdminProposalsPage() {
 
         {proposals.map((p) => (
           <div key={p.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="font-medium">{p.title}</p>
-            <p className="text-xs text-white/40 mt-0.5">
-              {p.areaLabel} · by {p.authorName}
-              {p.academyComplete ? " · ✅ completed Academy" : " · Academy not completed"}
-            </p>
-            <p className="text-sm text-white/70 mt-3"><span className="text-white/40">Problem:</span> {p.problem}</p>
-            <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Change:</span> {p.proposedChange}</p>
-            <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Evidence:</span> {p.evidence}</p>
+            {editingId === p.id ? (
+              <div className="space-y-2">
+                <input
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  placeholder="Title"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm font-medium"
+                />
+                <input
+                  value={editForm.areaLabel}
+                  onChange={(e) => setEditForm({ ...editForm, areaLabel: e.target.value })}
+                  placeholder="Area"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <textarea
+                  value={editForm.problem}
+                  onChange={(e) => setEditForm({ ...editForm, problem: e.target.value })}
+                  placeholder="Problem"
+                  rows={2}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <textarea
+                  value={editForm.whoAffected}
+                  onChange={(e) => setEditForm({ ...editForm, whoAffected: e.target.value })}
+                  placeholder="Who's affected"
+                  rows={2}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <textarea
+                  value={editForm.proposedChange}
+                  onChange={(e) => setEditForm({ ...editForm, proposedChange: e.target.value })}
+                  placeholder="Proposed change"
+                  rows={2}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <textarea
+                  value={editForm.evidence}
+                  onChange={(e) => setEditForm({ ...editForm, evidence: e.target.value })}
+                  placeholder="Evidence"
+                  rows={2}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => saveContentEdit(p.id)} className="text-sm rounded-lg bg-[#00E5C3] text-[#0E1225] px-3 py-1.5">Save</button>
+                  <button onClick={() => setEditingId(null)} className="text-sm rounded-lg border border-white/15 px-3 py-1.5">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-medium">{p.title}</p>
+                  <button onClick={() => startEdit(p)} className="text-sm text-[#00E5C3]/80 hover:text-[#00E5C3] shrink-0">
+                    Edit
+                  </button>
+                </div>
+                <p className="text-xs text-white/40 mt-0.5">
+                  {p.areaLabel} · by {p.authorName}
+                  {p.academyComplete ? " · ✅ completed Academy" : " · Academy not completed"}
+                </p>
+                <p className="text-sm text-white/70 mt-3"><span className="text-white/40">Problem:</span> {p.problem}</p>
+                <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Change:</span> {p.proposedChange}</p>
+                <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Evidence:</span> {p.evidence}</p>
+              </>
+            )}
 
             <div className="mt-4 flex flex-wrap gap-2">
               {tab === "pending_review" && (

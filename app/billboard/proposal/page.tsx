@@ -15,6 +15,7 @@ import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import type { Proposal, ProposalComment } from "@/types/academy";
 import TopNav from "@/components/TopNav";
 import DisplayNamePrompt from "@/components/DisplayNamePrompt";
+import ProposalVoiceRoom from "@/components/ProposalVoiceRoom";
 
 function ProposalProfile() {
   const searchParams = useSearchParams();
@@ -90,6 +91,10 @@ function ProposalProfile() {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={proposal.photoUrl} alt={proposal.title} className="w-full aspect-video object-cover rounded-2xl" />
       )}
+
+      <div className="mt-4">
+        <ProposalVoiceRoom proposalId={proposal.id} />
+      </div>
 
       <div className="mt-6 flex items-start justify-between gap-4">
         <div>
