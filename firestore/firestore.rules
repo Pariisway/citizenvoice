@@ -29,6 +29,16 @@ service cloud.firestore {
       return !exists(/databases/$(database)/documents/suspendedAuthors/$(request.auth.uid));
     }
 
+    // Membership: true once the anonymous session has been upgraded to a
+    // real account (email/password or Google — see QuickAccountPrompt.tsx,
+    // which links credentials onto the SAME uid rather than creating a new
+    // one). `sign_in_provider` comes straight from the ID token, so this
+    // needs no extra Firestore read. Voice chat and discussion are
+    // member-only; browsing and reading are open to everyone.
+    function isMember() {
+      return isSignedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
     // ---------- Public, read-only civic data ----------
     // Representatives, bills, meetings, districts: anyone (including
     // anonymous/guest users) can read. Only moderators/admins can write —
@@ -105,7 +115,7 @@ service cloud.firestore {
 
     match /proposalComments/{commentId} {
       allow read: if true;
-      allow create: if isSignedIn() && isNotSuspended()
+      allow create: if isMember() && isNotSuspended()
                     && request.resource.data.authorId == request.auth.uid
                     && request.resource.data.authorName is string
                     && request.resource.data.authorName.size() > 0;
@@ -116,7 +126,9 @@ service cloud.firestore {
     // Vote records are only ever created by the upvoteProposal Cloud
     // Function, which also increments the denormalized counter on the
     // proposal doc — keeps both in sync and prevents double-voting via
-    // direct client writes.
+    // direct client writes. Petition-signing stays open to anonymous
+    // visitors on purpose — it's the on-ramp into membership, not a
+    // member-only action.
     match /proposalUpvotes/{voteId} {
       allow read: if isSignedIn();
       allow write: if false;
@@ -129,9 +141,11 @@ service cloud.firestore {
     // proposals: docs also carry `roomId`/`roomType` for Community Chat
     // voice rooms (see CommunityVoiceRoom.tsx) — this rule doesn't need
     // to change for that, since it only ever validates uid ownership.
+    // The real speaking/listening gate is generateAgoraToken.ts (member
+    // only) — this rule is defense in depth, not the primary control.
     match /voiceRoomPresence/{docId} {
       allow read: if true;
-      allow create: if isSignedIn() && isNotSuspended()
+      allow create: if isMember() && isNotSuspended()
                     && request.resource.data.uid == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
       allow update: if false;
@@ -146,12 +160,11 @@ service cloud.firestore {
       allow create, update, delete: if isModeratorOrAbove();
     }
 
-    // Text messages inside a community room. Same shape/trust model as
-    // proposalComments — signed-in (anonymous identity is enough),
-    // not suspended, can only post as themselves.
+    // Text messages inside a community room. Member-only to post —
+    // anyone can read/browse without an account.
     match /communityMessages/{messageId} {
       allow read: if true;
-      allow create: if isSignedIn() && isNotSuspended()
+      allow create: if isMember() && isNotSuspended()
                     && request.resource.data.authorId == request.auth.uid
                     && request.resource.data.authorName is string
                     && request.resource.data.authorName.size() > 0;

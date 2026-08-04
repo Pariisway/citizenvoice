@@ -15,6 +15,7 @@ import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import type { Proposal, ProposalComment } from "@/types/academy";
 import TopNav from "@/components/TopNav";
 import DisplayNamePrompt from "@/components/DisplayNamePrompt";
+import QuickAccountPrompt from "@/components/QuickAccountPrompt";
 import ProposalVoiceRoom from "@/components/ProposalVoiceRoom";
 import ProposalTemplate from "@/components/ProposalTemplate";
 import { downloadProposalPdf } from "@/lib/generateProposalPdf";
@@ -22,7 +23,7 @@ import { downloadProposalPdf } from "@/lib/generateProposalPdf";
 function ProposalProfile() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const { uid, displayName, needsName } = useAnonymousIdentity();
+  const { uid, displayName, needsName, isMember } = useAnonymousIdentity();
 
   const [proposal, setProposal] = useState<Proposal | null | undefined>(undefined);
   const [comments, setComments] = useState<ProposalComment[]>([]);
@@ -30,6 +31,7 @@ function ProposalProfile() {
   const [voted, setVoted] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [showQuickAccount, setShowQuickAccount] = useState(false);
 
   useEffect(() => {
     if (!id) { setProposal(null); return; }
@@ -187,6 +189,16 @@ function ProposalProfile() {
 
         {needsName ? (
           <div className="mt-4"><DisplayNamePrompt /></div>
+        ) : !isMember ? (
+          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+            <p className="text-sm text-white/70">Joining the discussion is a member feature.</p>
+            <button
+              onClick={() => setShowQuickAccount(true)}
+              className="mt-2 rounded-lg bg-[#00E5C3] text-[#0E1225] font-medium px-4 py-2 text-sm hover:opacity-90 transition-opacity"
+            >
+              Create a free account
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleComment} className="mt-4 flex gap-2">
             <input
@@ -204,6 +216,8 @@ function ProposalProfile() {
           </form>
         )}
       </div>
+
+      <QuickAccountPrompt open={showQuickAccount} onClose={() => setShowQuickAccount(false)} />
     </div>
   );
 }

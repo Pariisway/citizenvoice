@@ -2,14 +2,12 @@
 //
 // Agora requires a signed token per user per channel (never expose your
 // Agora App Certificate to the client). This function mints one for
-// whoever calls it — anonymous Firebase Auth users included, since
-// request.auth is populated for anonymous sign-ins too.
+// whoever calls it — but only members (anonymous session upgraded to a
+// real account, see QuickAccountPrompt.tsx), not anonymous browsers.
 //
-// Speaking vs. listening is controlled by Agora `role`, not by whether the
-// user is "registered" — that's the whole point of the no-sign-up model.
-// Anyone with a display name set (see useAnonymousIdentity.ts) can speak;
-// moderators can still mute/kick via Agora's RTM channel + the
-// `voiceRooms` Firestore doc's moderator controls.
+// Speaking vs. listening is controlled by Agora `role`. Moderators can
+// still mute/kick via Agora's RTM channel + the `voiceRooms` Firestore
+// doc's moderator controls.
 
 import * as functions from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
@@ -42,14 +40,25 @@ export const generateAgoraToken = functions.onCall(
       throw new functions.HttpsError("unauthenticated", "Sign-in required.");
     }
 
+    // Voice chat is member-only: anyone can browse the site with zero
+    // sign-up, but joining a live room — listening or speaking — requires
+    // the free quick-account upgrade (see QuickAccountPrompt.tsx), which
+    // flips `sign_in_provider` off "anonymous" without losing the uid or
+    // anything already posted under it.
+    if (request.auth.token.firebase?.sign_in_provider === "anonymous") {
+      throw new functions.HttpsError(
+        "permission-denied",
+        "Create a free account to join voice chat."
+      );
+    }
+
     const { channelName, role } = request.data as TokenRequest;
     if (!channelName) {
       throw new functions.HttpsError("invalid-argument", "channelName is required.");
     }
 
     // Require a display name before granting a speaker token — keeps voice
-    // rooms from filling with literally anonymous, unaccountable speakers,
-    // while still requiring zero account creation.
+    // rooms from filling with unaccountable speakers.
     if (role === "speaker") {
       const profile = await db.collection("anonymousProfiles").doc(request.auth.uid).get();
       if (!profile.exists || !profile.data()?.displayName) {

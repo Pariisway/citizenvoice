@@ -18,6 +18,7 @@ import { firebaseApp } from "@/lib/firebaseClient";
 import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import DisplayNamePrompt from "@/components/DisplayNamePrompt";
 import MicPermissionGate from "@/components/MicPermissionGate";
+import QuickAccountPrompt from "@/components/QuickAccountPrompt";
 
 interface Participant {
   uid: string;
@@ -25,12 +26,13 @@ interface Participant {
 }
 
 export default function ProposalVoiceRoom({ proposalId }: { proposalId: string }) {
-  const { uid, displayName, needsName } = useAnonymousIdentity();
+  const { uid, displayName, needsName, isMember } = useAnonymousIdentity();
   const [joined, setJoined] = useState(false);
   const [muted, setMuted] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
+  const [showQuickAccount, setShowQuickAccount] = useState(false);
 
   const clientRef = useRef<any>(null);
   const micTrackRef = useRef<any>(null);
@@ -147,7 +149,19 @@ export default function ProposalVoiceRoom({ proposalId }: { proposalId: string }
         <div className="mt-3"><DisplayNamePrompt onReady={() => {}} /></div>
       )}
 
-      {!joined && showJoinPrompt && !needsName && (
+      {!joined && showJoinPrompt && !needsName && !isMember && (
+        <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <p className="text-sm text-white/70">Voice chat is a member feature.</p>
+          <button
+            onClick={() => setShowQuickAccount(true)}
+            className="mt-2 rounded-lg bg-[#00E5C3] text-[#0E1225] font-medium px-4 py-2 text-sm hover:opacity-90 transition-opacity"
+          >
+            Create a free account
+          </button>
+        </div>
+      )}
+
+      {!joined && showJoinPrompt && !needsName && isMember && (
         <div className="mt-3"><MicPermissionGate onGranted={handleMicGranted} /></div>
       )}
 
@@ -167,6 +181,8 @@ export default function ProposalVoiceRoom({ proposalId }: { proposalId: string }
           </button>
         </div>
       )}
+
+      <QuickAccountPrompt open={showQuickAccount} onClose={() => setShowQuickAccount(false)} />
     </div>
   );
 }

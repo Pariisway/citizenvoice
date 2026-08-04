@@ -12,6 +12,7 @@ import { getFirestore, collection, query, where, orderBy, getDocs } from "fireba
 import { firebaseApp } from "@/lib/firebaseClient";
 import TopNav from "@/components/TopNav";
 import DisplayNamePrompt from "@/components/DisplayNamePrompt";
+import QuickAccountPrompt from "@/components/QuickAccountPrompt";
 import { useAnonymousIdentity } from "@/lib/useAnonymousIdentity";
 import { useAcademyCompletion } from "@/lib/useAcademyCompletion";
 import { downloadProposalPdf } from "@/lib/generateProposalPdf";
@@ -25,21 +26,53 @@ const STATUS_LABEL: Record<Proposal["status"], string> = {
 };
 
 export default function DashboardPage() {
-  const { uid, displayName, photoUrl } = useAnonymousIdentity();
+  const { uid, displayName, photoUrl, ready, isMember } = useAnonymousIdentity();
   const { loading, isComplete, completedCount, totalLessons } = useAcademyCompletion();
   const [myProposals, setMyProposals] = useState<Proposal[] | null>(null);
+  const [showQuickAccount, setShowQuickAccount] = useState(false);
 
   const initial = displayName?.trim()?.[0]?.toUpperCase() ?? "?";
 
   useEffect(() => {
-    if (!uid) return;
+    if (!uid || !isMember) return;
     const db = getFirestore(firebaseApp);
     getDocs(
       query(collection(db, "proposals"), where("authorUid", "==", uid), orderBy("createdAt", "desc"))
     ).then((snap) => {
       setMyProposals(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Proposal)));
     });
-  }, [uid]);
+  }, [uid, isMember]);
+
+  if (ready && !isMember) {
+    return (
+      <main className="min-h-screen bg-[#0E1225] text-white">
+        <TopNav />
+        <div className="max-w-xl mx-auto px-6 py-16 text-center">
+          <div
+            className="w-16 h-16 mx-auto rounded-full bg-white/10 border border-white/10
+                       flex items-center justify-center text-xl font-semibold text-white/60"
+            aria-hidden
+          >
+            {initial}
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold">Your dashboard is a member feature</h1>
+          <p className="mt-2 text-white/60">
+            Create a free account (10 seconds, no forms) to get a dashboard, join
+            voice chat, and post in discussions — everything you've already done
+            here stays under your name.
+          </p>
+          <button
+            onClick={() => setShowQuickAccount(true)}
+            className="mt-6 rounded-xl bg-[#00E5C3] text-[#0E1225] font-medium px-6 py-3
+                       hover:opacity-90 transition-opacity"
+          >
+            Create a free account
+          </button>
+        </div>
+        <QuickAccountPrompt open={showQuickAccount} onClose={() => setShowQuickAccount(false)} />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#0E1225] text-white">
