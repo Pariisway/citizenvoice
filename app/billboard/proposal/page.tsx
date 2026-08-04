@@ -16,6 +16,8 @@ import type { Proposal, ProposalComment } from "@/types/academy";
 import TopNav from "@/components/TopNav";
 import DisplayNamePrompt from "@/components/DisplayNamePrompt";
 import ProposalVoiceRoom from "@/components/ProposalVoiceRoom";
+import ProposalTemplate from "@/components/ProposalTemplate";
+import { downloadProposalPdf } from "@/lib/generateProposalPdf";
 
 function ProposalProfile() {
   const searchParams = useSearchParams();
@@ -26,6 +28,8 @@ function ProposalProfile() {
   const [comments, setComments] = useState<ProposalComment[]>([]);
   const [commentText, setCommentText] = useState("");
   const [voted, setVoted] = useState(false);
+  const [showTemplate, setShowTemplate] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!id) { setProposal(null); return; }
@@ -56,6 +60,18 @@ function ProposalProfile() {
     await upvote({ proposalId: id });
     setVoted(true);
     setProposal((p) => (p ? { ...p, upvoteCount: p.upvoteCount + 1 } : p));
+  }
+
+  async function handleDownload() {
+    if (!proposal) return;
+    setDownloading(true);
+    try {
+      await downloadProposalPdf(proposal);
+    } catch (err) {
+      alert("Couldn't generate the PDF — try again in a moment.");
+    } finally {
+      setDownloading(false);
+    }
   }
 
   function handleShare() {
@@ -110,19 +126,19 @@ function ProposalProfile() {
         )}
       </div>
 
-      <div className="mt-4 flex gap-3">
+      <div className="mt-4 flex flex-wrap gap-3">
         <button
           onClick={handleUpvote}
           disabled={voted}
           className="rounded-xl border border-white/20 px-5 py-2.5 text-sm hover:border-[#00E5C3]/50 transition-colors disabled:opacity-50"
         >
-          ▲ {proposal.upvoteCount} supporters
+          ✍️ {voted ? "Signed" : "Sign the petition"} · {proposal.upvoteCount} signed
         </button>
         <button
           onClick={handleShare}
           className="rounded-xl border border-white/20 px-5 py-2.5 text-sm hover:border-[#00E5C3]/50 transition-colors"
         >
-          Share
+          Share to grow support
         </button>
       </div>
 
@@ -132,6 +148,28 @@ function ProposalProfile() {
         <InfoBlock label="Proposed Change" text={proposal.proposedChange} />
         <InfoBlock label="Evidence" text={proposal.evidence} />
       </div>
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        <button
+          onClick={() => setShowTemplate((s) => !s)}
+          className="rounded-xl bg-white/5 border border-white/10 px-5 py-2.5 text-sm hover:border-[#00E5C3]/50 transition-colors"
+        >
+          {showTemplate ? "Hide full document" : "View full proposal document"}
+        </button>
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="rounded-xl bg-[#00E5C3]/10 border border-[#00E5C3]/40 text-[#00E5C3] px-5 py-2.5 text-sm hover:bg-[#00E5C3]/15 transition-colors disabled:opacity-50"
+        >
+          {downloading ? "Preparing PDF…" : "⬇ Download as PDF"}
+        </button>
+      </div>
+
+      {showTemplate && (
+        <div className="mt-6">
+          <ProposalTemplate proposal={proposal} />
+        </div>
+      )}
 
       <div className="mt-10">
         <h2 className="font-medium">Discussion</h2>

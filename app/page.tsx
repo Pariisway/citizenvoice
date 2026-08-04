@@ -9,6 +9,7 @@ import type { HomepageContent } from "@/types/siteContent";
 import AdSlot from "@/components/AdSlot";
 import TopNav from "@/components/TopNav";
 import WeeklyRhythm from "@/components/WeeklyRhythm";
+import SiteRules from "@/components/SiteRules";
 import FeaturedVideo from "@/components/FeaturedVideo";
 
 export default function HomePage() {
@@ -127,6 +128,8 @@ export default function HomePage() {
       </section>
 
       <WeeklyRhythm />
+
+      <SiteRules />
 
       <div className="px-6 max-w-2xl mx-auto">
         <AdSlot slot="home-mid" />

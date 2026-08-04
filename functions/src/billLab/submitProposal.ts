@@ -41,6 +41,12 @@ interface SubmitProposalRequest {
   areaCityFips?: string;
   areaCountyFips?: string;
   authorName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  budgetSummary: string;
+  resourcesNeeded?: string;
+  benefits: string;
+  conclusion: string;
 }
 
 export const submitProposal = functions.onCall(async (request) => {
@@ -71,6 +77,7 @@ export const submitProposal = functions.onCall(async (request) => {
   const data = request.data as SubmitProposalRequest;
   const required: (keyof SubmitProposalRequest)[] = [
     "title", "problem", "whoAffected", "proposedChange", "evidence", "areaLabel", "authorName",
+    "contactEmail", "budgetSummary", "benefits", "conclusion",
   ];
   for (const field of required) {
     if (!data[field] || !String(data[field]).trim()) {
@@ -91,6 +98,12 @@ export const submitProposal = functions.onCall(async (request) => {
     areaCountyFips: data.areaCountyFips,
     authorUid: uid,
     authorName: data.authorName.trim(),
+    contactEmail: data.contactEmail.trim(),
+    contactPhone: data.contactPhone?.trim() || undefined,
+    budgetSummary: data.budgetSummary.trim(),
+    resourcesNeeded: data.resourcesNeeded?.trim() || undefined,
+    benefits: data.benefits.trim(),
+    conclusion: data.conclusion.trim(),
     status: "pending_review",
     upvoteCount: 0,
     academyComplete,

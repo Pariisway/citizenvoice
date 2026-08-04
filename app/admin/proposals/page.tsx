@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import { firebaseApp } from "@/lib/firebaseClient";
 import type { Proposal, ProposalStatus } from "@/types/academy";
+import { downloadProposalPdf } from "@/lib/generateProposalPdf";
 
 const TABS: { status: ProposalStatus; label: string }[] = [
   { status: "pending_review", label: "Pending Review" },
@@ -24,7 +25,12 @@ export default function AdminProposalsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{
     title: string; problem: string; whoAffected: string; proposedChange: string; evidence: string; areaLabel: string;
-  }>({ title: "", problem: "", whoAffected: "", proposedChange: "", evidence: "", areaLabel: "" });
+    contactEmail: string; contactPhone: string; budgetSummary: string; resourcesNeeded: string;
+    benefits: string; conclusion: string;
+  }>({
+    title: "", problem: "", whoAffected: "", proposedChange: "", evidence: "", areaLabel: "",
+    contactEmail: "", contactPhone: "", budgetSummary: "", resourcesNeeded: "", benefits: "", conclusion: "",
+  });
 
   async function load() {
     setLoading(true);
@@ -56,11 +62,17 @@ export default function AdminProposalsPage() {
     setEditForm({
       title: p.title, problem: p.problem, whoAffected: p.whoAffected,
       proposedChange: p.proposedChange, evidence: p.evidence, areaLabel: p.areaLabel,
+      contactEmail: p.contactEmail ?? "", contactPhone: p.contactPhone ?? "",
+      budgetSummary: p.budgetSummary ?? "", resourcesNeeded: p.resourcesNeeded ?? "",
+      benefits: p.benefits ?? "", conclusion: p.conclusion ?? "",
     });
   }
 
   async function saveContentEdit(id: string) {
     const db = getFirestore(firebaseApp);
+    // Note: the Firestore web SDK rejects `undefined` field values (unlike
+    // the Admin SDK used in Cloud Functions), so optional fields fall back
+    // to "" here rather than undefined.
     await updateDoc(doc(db, "proposals", id), {
       title: editForm.title.trim(),
       problem: editForm.problem.trim(),
@@ -68,6 +80,12 @@ export default function AdminProposalsPage() {
       proposedChange: editForm.proposedChange.trim(),
       evidence: editForm.evidence.trim(),
       areaLabel: editForm.areaLabel.trim(),
+      contactEmail: editForm.contactEmail.trim(),
+      contactPhone: editForm.contactPhone.trim(),
+      budgetSummary: editForm.budgetSummary.trim(),
+      resourcesNeeded: editForm.resourcesNeeded.trim(),
+      benefits: editForm.benefits.trim(),
+      conclusion: editForm.conclusion.trim(),
     });
     setEditingId(null);
     await load();
@@ -142,6 +160,48 @@ export default function AdminProposalsPage() {
                   className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
                 />
                 <div className="flex gap-2">
+                  <input
+                    value={editForm.contactEmail}
+                    onChange={(e) => setEditForm({ ...editForm, contactEmail: e.target.value })}
+                    placeholder="Contact email"
+                    className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                  />
+                  <input
+                    value={editForm.contactPhone}
+                    onChange={(e) => setEditForm({ ...editForm, contactPhone: e.target.value })}
+                    placeholder="Contact phone"
+                    className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                  />
+                </div>
+                <textarea
+                  value={editForm.budgetSummary}
+                  onChange={(e) => setEditForm({ ...editForm, budgetSummary: e.target.value })}
+                  placeholder="Budget summary"
+                  rows={2}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <textarea
+                  value={editForm.resourcesNeeded}
+                  onChange={(e) => setEditForm({ ...editForm, resourcesNeeded: e.target.value })}
+                  placeholder="Resources needed"
+                  rows={2}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <textarea
+                  value={editForm.benefits}
+                  onChange={(e) => setEditForm({ ...editForm, benefits: e.target.value })}
+                  placeholder="Benefits & community support"
+                  rows={2}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <textarea
+                  value={editForm.conclusion}
+                  onChange={(e) => setEditForm({ ...editForm, conclusion: e.target.value })}
+                  placeholder="Conclusion"
+                  rows={2}
+                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-sm"
+                />
+                <div className="flex gap-2">
                   <button onClick={() => saveContentEdit(p.id)} className="text-sm rounded-lg bg-[#00E5C3] text-[#0E1225] px-3 py-1.5">Save</button>
                   <button onClick={() => setEditingId(null)} className="text-sm rounded-lg border border-white/15 px-3 py-1.5">Cancel</button>
                 </div>
@@ -150,9 +210,14 @@ export default function AdminProposalsPage() {
               <>
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-medium">{p.title}</p>
-                  <button onClick={() => startEdit(p)} className="text-sm text-[#00E5C3]/80 hover:text-[#00E5C3] shrink-0">
-                    Edit
-                  </button>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button onClick={() => downloadProposalPdf(p)} className="text-sm text-white/50 hover:text-white/80">
+                      PDF
+                    </button>
+                    <button onClick={() => startEdit(p)} className="text-sm text-[#00E5C3]/80 hover:text-[#00E5C3]">
+                      Edit
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-white/40 mt-0.5">
                   {p.areaLabel} · by {p.authorName}
@@ -161,6 +226,12 @@ export default function AdminProposalsPage() {
                 <p className="text-sm text-white/70 mt-3"><span className="text-white/40">Problem:</span> {p.problem}</p>
                 <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Change:</span> {p.proposedChange}</p>
                 <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Evidence:</span> {p.evidence}</p>
+                {p.budgetSummary && (
+                  <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Budget:</span> {p.budgetSummary}</p>
+                )}
+                {p.benefits && (
+                  <p className="text-sm text-white/70 mt-2"><span className="text-white/40">Benefits:</span> {p.benefits}</p>
+                )}
               </>
             )}
 

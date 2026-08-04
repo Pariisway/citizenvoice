@@ -17,6 +17,14 @@
 // trade for "genuinely no sign-up" — just don't expect ban evasion to be
 // hard. Pair this with Firebase App Check (see ARCHITECTURE.md) to raise
 // the cost of bot-driven ban evasion.
+//
+// Membership: `isMember` is true once this uid has been upgraded from a
+// bare anonymous session to a real account (email/password or Google —
+// see DisplayNamePrompt's "quick account" step, which calls
+// linkWithCredential/linkWithPopup so the SAME uid carries forward, name
+// and all). `user.isAnonymous` flips to false the moment that link
+// succeeds. Gate member-only surfaces (voice chat, discussion, dashboard)
+// on `isMember`, not just on having a display name.
 
 "use client";
 
@@ -35,14 +43,18 @@ const DISPLAY_NAME_KEY = "citizenVoice.displayName";
 export interface AnonymousIdentity {
   uid: string | null;
   displayName: string | null;
+  photoUrl: string | null;
+  isMember: boolean;
   ready: boolean;
   needsName: boolean;
   setDisplayName: (name: string) => Promise<void>;
+  setPhotoUrl: (url: string) => Promise<void>;
 }
 
 export function useAnonymousIdentity(): AnonymousIdentity {
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayNameState] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrlState] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -61,15 +73,20 @@ export function useAnonymousIdentity(): AnonymousIdentity {
         ? window.localStorage.getItem(DISPLAY_NAME_KEY)
         : null;
 
+      const db = getFirestore(firebaseApp);
+      const profileDoc = await getDoc(doc(db, "anonymousProfiles", u.uid));
+      const remotePhoto = profileDoc.data()?.photoUrl ?? null;
+      // Google sign-in gives us a photo automatically; a self-uploaded one
+      // (from the quick-account popup) takes priority if present.
+      setPhotoUrlState(remotePhoto ?? u.photoURL ?? null);
+
       if (localName) {
         setDisplayNameState(localName);
       } else {
         // Fall back to Firestore in case they set a name on another session
         // of the same browser (e.g. after clearing localStorage but not
         // IndexedDB, where the Firebase Auth session persists).
-        const db = getFirestore(firebaseApp);
-        const profileDoc = await getDoc(doc(db, "anonymousProfiles", u.uid));
-        const remoteName = profileDoc.data()?.displayName ?? null;
+        const remoteName = profileDoc.data()?.displayName ?? u.displayName ?? null;
         setDisplayNameState(remoteName);
         if (remoteName && typeof window !== "undefined") {
           window.localStorage.setItem(DISPLAY_NAME_KEY, remoteName);
@@ -97,11 +114,25 @@ export function useAnonymousIdentity(): AnonymousIdentity {
     setDisplayNameState(trimmed);
   }, [user]);
 
+  const setPhotoUrl = useCallback(async (url: string) => {
+    if (!user) return;
+    const db = getFirestore(firebaseApp);
+    await setDoc(
+      doc(db, "anonymousProfiles", user.uid),
+      { photoUrl: url, updatedAt: new Date().toISOString() },
+      { merge: true }
+    );
+    setPhotoUrlState(url);
+  }, [user]);
+
   return {
     uid: user?.uid ?? null,
     displayName,
+    photoUrl,
+    isMember: !!user && !user.isAnonymous,
     ready,
     needsName: ready && !displayName,
     setDisplayName,
+    setPhotoUrl,
   };
 }

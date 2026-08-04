@@ -13,7 +13,8 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "firebase": "^11.0.0",
-    "agora-rtc-sdk-ng": "^4.22.0"
+    "agora-rtc-sdk-ng": "^4.22.0",
+    "jspdf": "^2.5.2"
   },
   "devDependencies": {
     "typescript": "^5.5.0",

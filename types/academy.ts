@@ -40,8 +40,24 @@ export interface Proposal {
   areaCountyFips?: string;
   authorUid: string;
   authorName: string;
+  // ---- Contact + full proposal template fields ----
+  // These back the formatted document shown on /billboard/proposal (see
+  // components/ProposalTemplate.tsx) and its PDF export
+  // (lib/generateProposalPdf.ts). Modeled on the structure Illinois
+  // legislative offices actually expect from a citizen-drafted proposal:
+  // a cover page, problem statement, proposed solution (with budget), and
+  // a benefits/community-support close — see ARCHITECTURE.md for the
+  // sourcing notes on that structure. Optional so proposals submitted
+  // before this shipped don't break.
+  contactEmail?: string;
+  contactPhone?: string;
+  budgetSummary?: string;    // rough cost + funding source, kept short
+  resourcesNeeded?: string;  // staff time, land, permits, etc.
+  benefits?: string;         // who benefits and how, short and concrete
+  conclusion?: string;       // 2-3 sentences: problem, solution, the ask
   status: ProposalStatus;
-  upvoteCount: number;
+  upvoteCount: number;       // doubles as the petition signature count —
+                              // see upvoteProposal Cloud Function
   academyComplete?: boolean;
   createdAt: string;
   reviewedAt?: string;
