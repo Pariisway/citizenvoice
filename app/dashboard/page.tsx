@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { getFirestore, collection, query, where, orderBy, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { firebaseApp } from "@/lib/firebaseClient";
 import TopNav from "@/components/TopNav";
 import ProfileEditor from "@/components/ProfileEditor";
@@ -49,6 +49,13 @@ export default function DashboardPage() {
   async function handleSignOut() {
     await signOut(getAuth(firebaseApp));
     window.location.href = "/";
+  }
+
+  async function handleDeleteProposal(id: string) {
+    if (!confirm("Delete this proposal permanently? This can't be undone.")) return;
+    const db = getFirestore(firebaseApp);
+    await deleteDoc(doc(db, "proposals", id));
+    setMyProposals((ps) => ps?.filter((p) => p.id !== id) ?? null);
   }
 
   if (ready && !isMember) {
@@ -177,6 +184,12 @@ export default function DashboardPage() {
                     className="shrink-0 text-xs rounded-lg border border-white/15 px-3 py-1.5 hover:border-[#00E5C3]/50 transition-colors"
                   >
                     ⬇ PDF
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProposal(p.id)}
+                    className="shrink-0 text-xs rounded-lg border border-red-400/30 text-red-300 px-3 py-1.5 hover:border-red-400/60 transition-colors"
+                  >
+                    Delete
                   </button>
                 </div>
               ))}

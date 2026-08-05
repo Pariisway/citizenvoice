@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  getFirestore, collection, getDocs, query, where, orderBy, doc, updateDoc,
+  getFirestore, collection, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc,
 } from "firebase/firestore";
 import { firebaseApp } from "@/lib/firebaseClient";
 import type { Proposal, ProposalStatus } from "@/types/academy";
@@ -88,6 +88,13 @@ export default function AdminProposalsPage() {
       conclusion: editForm.conclusion.trim(),
     });
     setEditingId(null);
+    await load();
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Delete this proposal permanently? This can't be undone.")) return;
+    const db = getFirestore(firebaseApp);
+    await deleteDoc(doc(db, "proposals", id));
     await load();
   }
 
@@ -216,6 +223,9 @@ export default function AdminProposalsPage() {
                     </button>
                     <button onClick={() => startEdit(p)} className="text-sm text-[#00E5C3]/80 hover:text-[#00E5C3]">
                       Edit
+                    </button>
+                    <button onClick={() => handleDelete(p.id)} className="text-sm text-red-300/80 hover:text-red-300">
+                      Delete
                     </button>
                   </div>
                 </div>

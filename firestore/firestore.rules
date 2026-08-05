@@ -110,7 +110,10 @@ service cloud.firestore {
       allow read: if true;
       allow create: if false;
       allow update: if isModeratorOrAbove();
-      allow delete: if isModeratorOrAbove();
+      // Authors can delete their own proposal (e.g. from their
+      // dashboard), moderators+ can delete any.
+      allow delete: if isModeratorOrAbove()
+                    || (isSignedIn() && resource.data.authorUid == request.auth.uid);
     }
 
     match /proposalComments/{commentId} {

@@ -71,6 +71,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <FeaturedVideo />
+
       <section className="px-6 py-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-semibold text-center">How it works</h2>
@@ -96,7 +98,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <FeaturedVideo />
 
       {/* Educational sections — real, substantial content, editable from /admin/homepage */}
       <section className="px-6 py-16 border-y border-white/10 bg-white/[0.02]">

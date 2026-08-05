@@ -73,6 +73,17 @@ export default function CommunityVoiceRoom({ communityId, communityName }: { com
 
       const client = SDK.createClient({ mode: "rtc", codec: "vp8" });
       clientRef.current = client;
+
+      // Same fix as ProposalVoiceRoom.tsx — subscribe to remote audio and
+      // play it. Publishing your own track alone gives you no sound.
+      client.on("user-published", async (user: any, mediaType: "audio" | "video") => {
+        await client.subscribe(user, mediaType);
+        if (mediaType === "audio") {
+          user.audioTrack?.play();
+        }
+      });
+      client.on("user-unpublished", () => {});
+
       await client.join(data.appId, channelName, data.token, null);
 
       const micTrack = await SDK.createMicrophoneAudioTrack();
@@ -128,7 +139,7 @@ export default function CommunityVoiceRoom({ communityId, communityName }: { com
       </div>
 
       {participants.length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="mt-2 max-h-32 overflow-y-auto flex flex-wrap gap-1.5 content-start">
           {participants.map((p) => (
             <span key={p.uid} className="text-xs rounded-full bg-white/10 px-2.5 py-1 text-white/70">
               {p.displayName}

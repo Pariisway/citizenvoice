@@ -71,6 +71,20 @@ export default function ProposalVoiceRoom({ proposalId }: { proposalId: string }
 
       const client = SDK.createClient({ mode: "rtc", codec: "vp8" });
       clientRef.current = client;
+
+      // This was the actual cause of "mic works but no sound": publishing
+      // your own track doesn't do anything for what you hear. Agora
+      // requires explicitly subscribing to each remote user's track and
+      // calling .play() on it — without this handler, everyone joins,
+      // everyone publishes, and nobody ever hears anybody.
+      client.on("user-published", async (user: any, mediaType: "audio" | "video") => {
+        await client.subscribe(user, mediaType);
+        if (mediaType === "audio") {
+          user.audioTrack?.play();
+        }
+      });
+      client.on("user-unpublished", () => {});
+
       await client.join(data.appId, channelName, data.token, null);
 
       const micTrack = await SDK.createMicrophoneAudioTrack();
@@ -125,7 +139,7 @@ export default function ProposalVoiceRoom({ proposalId }: { proposalId: string }
       </div>
 
       {participants.length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="mt-2 max-h-32 overflow-y-auto flex flex-wrap gap-1.5 content-start">
           {participants.map((p) => (
             <span key={p.uid} className="text-xs rounded-full bg-white/10 px-2.5 py-1 text-white/70">
               {p.displayName}
