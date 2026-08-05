@@ -65,7 +65,7 @@ export function useTeamMembers() {
 }
 
 export function TeamCard({ member, size = "md" }: { member: TeamMember; size?: "sm" | "md" }) {
-  const dims = size === "sm" ? "w-12 h-12 text-base" : "w-16 h-16 text-lg";
+  const dims = size === "sm" ? "w-16 h-16 text-lg" : "w-20 h-20 text-2xl";
   const initial = member.displayName.trim()[0]?.toUpperCase() ?? "?";
 
   return (
@@ -83,7 +83,7 @@ export function TeamCard({ member, size = "md" }: { member: TeamMember; size?: "
         </div>
       )}
       <div className="min-w-0">
-        <p className="font-medium truncate">{member.displayName}</p>
+        <p className="font-semibold text-base truncate">{member.displayName}</p>
         <p className="text-xs text-[#00E5C3]/80 mt-0.5">{member.title || ROLE_LABEL[member.role] || member.role}</p>
       </div>
     </Link>

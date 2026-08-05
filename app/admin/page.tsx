@@ -20,6 +20,11 @@ export default function AdminDashboardPage() {
           href="/admin/community-moderation"
         />
         <DashboardCard
+          title="Donate Page"
+          description="Edit the donate page copy and set your Stripe Payment Link once you have one."
+          href="/admin/donate"
+        />
+        <DashboardCard
           title="Upload a video"
           description="Add a video to Civic Academy — meeting recordings, candidate interviews, explainers."
           href="/admin/videos"

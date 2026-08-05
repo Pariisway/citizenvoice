@@ -19,6 +19,7 @@
 import * as functions from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { enforceRateLimit } from "../moderation/enforceRateLimit";
 
 if (!getApps().length) {
   initializeApp();
@@ -63,6 +64,10 @@ export const submitProposal = functions.onCall(async (request) => {
       "Create a free account to submit a proposal."
     );
   }
+
+  // 5 proposals per day per member — generous for a real citizen, a real
+  // wall for a script.
+  await enforceRateLimit(uid, "submitProposal", 5, 24 * 60 * 60 * 1000);
 
   // Re-verify Academy completion server-side — the client-side checklist
   // and gate are UX, not security; someone could otherwise call this

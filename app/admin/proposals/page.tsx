@@ -9,6 +9,7 @@ import {
 import { firebaseApp } from "@/lib/firebaseClient";
 import type { Proposal, ProposalStatus } from "@/types/academy";
 import { downloadProposalPdf } from "@/lib/generateProposalPdf";
+import { downloadSignaturesPdf } from "@/lib/generateSignaturesPdf";
 
 const TABS: { status: ProposalStatus; label: string }[] = [
   { status: "pending_review", label: "Pending Review" },
@@ -220,6 +221,9 @@ export default function AdminProposalsPage() {
                   <div className="flex items-center gap-3 shrink-0">
                     <button onClick={() => downloadProposalPdf(p)} className="text-sm text-white/50 hover:text-white/80">
                       PDF
+                    </button>
+                    <button onClick={() => downloadSignaturesPdf(p)} className="text-sm text-white/50 hover:text-white/80">
+                      Signatures PDF
                     </button>
                     <button onClick={() => startEdit(p)} className="text-sm text-[#00E5C3]/80 hover:text-[#00E5C3]">
                       Edit

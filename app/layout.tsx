@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
+import ChatRoomSidebar from "@/components/ChatRoomSidebar";
 
 export const metadata: Metadata = {
   title: "Citizen Voice — Know Your Representatives",
@@ -30,7 +31,10 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
       </head>
-      <body className="bg-[#0E1225]">{children}</body>
+      <body className="bg-[#0E1225]">
+        {children}
+        <ChatRoomSidebar />
+      </body>
     </html>
   );
 }

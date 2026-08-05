@@ -84,7 +84,7 @@ function CommunityRoom() {
           )}
           {messages.map((m) => (
             <div key={m.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-              <p className="text-xs text-white/40">{m.authorName}</p>
+              <p className="text-sm font-medium text-white/70">{m.authorName}</p>
               <p className="text-sm text-white/80 mt-1">{m.text}</p>
             </div>
           ))}

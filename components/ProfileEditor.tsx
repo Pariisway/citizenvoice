@@ -63,13 +63,13 @@ export default function ProfileEditor() {
         <div className="relative shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {photoUrl ? (
-            <img src={photoUrl} alt={displayName ?? "Profile"} className="w-14 h-14 rounded-full object-cover border border-white/10" />
+            <img src={photoUrl} alt={displayName ?? "Profile"} className="w-20 h-20 rounded-full object-cover border border-white/10" />
           ) : (
-            <div className="w-14 h-14 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-lg font-semibold text-white/60">
+            <div className="w-20 h-20 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-semibold text-white/60">
               {initial}
             </div>
           )}
-          <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#00E5C3] text-[#0E1225] text-xs flex items-center justify-center cursor-pointer">
+          <label className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#00E5C3] text-[#0E1225] text-sm flex items-center justify-center cursor-pointer">
             {uploading ? "…" : "✎"}
             <input
               type="file"
@@ -107,7 +107,7 @@ export default function ProfileEditor() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <p className="font-medium truncate">{displayName ?? "Unnamed"}</p>
+              <p className="font-medium text-lg truncate">{displayName ?? "Unnamed"}</p>
               <button
                 onClick={() => setEditing(true)}
                 className="text-xs text-[#00E5C3]/80 hover:text-[#00E5C3] shrink-0"

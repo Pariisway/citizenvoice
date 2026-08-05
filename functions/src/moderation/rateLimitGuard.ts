@@ -7,6 +7,13 @@
 // auto-flags bursty posting for moderator review within seconds, and
 // disables further posting from that uid until a moderator clears it.
 //
+// Watches the collections actually written to today — proposalComments
+// (bill discussion) and communityMessages (Community Chat). Callable
+// functions (submitProposal, upvoteProposal/signPetition,
+// generateAgoraToken) have their own separate hard limits — see
+// enforceRateLimit.ts — since those can be checked before the write
+// happens, not just flagged after.
+//
 // This is a floor, not a ceiling — pair it with Firebase App Check
 // (blocks non-browser/bot traffic) and a moderator queue that's actually
 // staffed, especially in the weeks before an election.
@@ -54,20 +61,20 @@ async function checkBurstAndFlag(authorUid: string, collectionName: string, docI
   }
 }
 
-export const guardCommentBursts = onDocumentCreated(
-  "comments/{commentId}",
+export const guardProposalCommentBursts = onDocumentCreated(
+  "proposalComments/{commentId}",
   async (event) => {
     const data = event.data?.data();
     if (!data?.authorId) return;
-    await checkBurstAndFlag(data.authorId, "comments", event.params.commentId);
+    await checkBurstAndFlag(data.authorId, "proposalComments", event.params.commentId);
   }
 );
 
-export const guardQuestionBursts = onDocumentCreated(
-  "questions/{questionId}",
+export const guardCommunityMessageBursts = onDocumentCreated(
+  "communityMessages/{messageId}",
   async (event) => {
     const data = event.data?.data();
     if (!data?.authorId) return;
-    await checkBurstAndFlag(data.authorId, "questions", event.params.questionId);
+    await checkBurstAndFlag(data.authorId, "communityMessages", event.params.messageId);
   }
 );

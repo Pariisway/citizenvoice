@@ -15,6 +15,7 @@ import { defineSecret } from "firebase-functions/params";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import pkg from "agora-access-token";
+import { enforceRateLimit } from "../moderation/enforceRateLimit";
 const { RtcTokenBuilder, RtcRole } = pkg;
 
 if (!getApps().length) {
@@ -49,6 +50,12 @@ export const generateAgoraToken = functions.onCall(
     if (!channelName) {
       throw new functions.HttpsError("invalid-argument", "channelName is required.");
     }
+
+    // 60 token requests/hour per identity — generous for someone
+    // legitimately hopping between rooms, a real wall against a script
+    // hammering this endpoint (each call touches Agora's API, so this
+    // matters for cost too, not just abuse).
+    await enforceRateLimit(request.auth.uid, "generateAgoraToken", 60, 60 * 60 * 1000);
 
     if (
       channelName.startsWith("proposal-") &&

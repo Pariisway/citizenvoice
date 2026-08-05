@@ -151,8 +151,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="px-6 py-10 text-center text-sm text-white/30">
+      <footer className="px-6 py-10 text-center text-sm text-white/30 space-x-4">
         <Link href="/privacy" className="hover:text-white/60">Privacy Policy</Link>
+        <Link href="/donate" className="hover:text-white/60">Donate</Link>
       </footer>
     </main>
   );

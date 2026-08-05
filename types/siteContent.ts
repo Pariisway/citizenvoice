@@ -21,3 +21,14 @@ export interface HomepageContent {
   faq: FaqItem[];
   updatedAt?: string;
 }
+
+export interface DonateContent {
+  headline: string;
+  body: string;
+  // A Stripe Payment Link (or any hosted checkout URL) — paste one in
+  // here from /admin/donate once Stripe access is sorted out. Until
+  // then, the public /donate page shows a "coming soon" state instead
+  // of a dead button.
+  paymentLink?: string;
+  updatedAt?: string;
+}

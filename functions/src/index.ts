@@ -2,7 +2,7 @@
 export { findMyRepresentatives } from "./findMyRepresentatives";
 export { setAdminRole } from "./admin/setAdminRole";
 export { generateAgoraToken } from "./voice/generateAgoraToken";
-export { guardCommentBursts, guardQuestionBursts } from "./moderation/rateLimitGuard";
+export { guardProposalCommentBursts, guardCommunityMessageBursts } from "./moderation/rateLimitGuard";
 export { submitProposal } from "./billLab/submitProposal";
 export { upvoteProposal } from "./billLab/upvoteProposal";
 

@@ -16,6 +16,7 @@
 import * as functions from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { enforceRateLimit } from "../moderation/enforceRateLimit";
 
 if (!getApps().length) {
   initializeApp();
@@ -46,6 +47,11 @@ export const upvoteProposal = functions.onCall(async (request) => {
   if (!email?.trim() || !EMAIL_RE.test(email.trim())) {
     throw new functions.HttpsError("invalid-argument", "A valid email is required to sign.");
   }
+
+  // 30 signatures/hour per identity — enough for an enthusiastic real
+  // person signing several petitions, a real wall for a signature-flooding
+  // script.
+  await enforceRateLimit(uid, "signPetition", 30, 60 * 60 * 1000);
 
   const voteRef = db.collection("proposalUpvotes").doc(`${proposalId}_${uid}`);
   const proposalRef = db.collection("proposals").doc(proposalId);

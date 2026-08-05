@@ -64,8 +64,8 @@ export default function DashboardPage() {
         <TopNav />
         <div className="max-w-xl mx-auto px-6 py-16 text-center">
           <div
-            className="w-16 h-16 mx-auto rounded-full bg-white/10 border border-white/10
-                       flex items-center justify-center text-xl font-semibold text-white/60"
+            className="w-24 h-24 mx-auto rounded-full bg-white/10 border border-white/10
+                       flex items-center justify-center text-3xl font-semibold text-white/60"
             aria-hidden
           >
             {initial}
